@@ -1,0 +1,503 @@
+/*
+ * Shared button tokens. Override any --shsg-* variable in app CSS to retheme.
+ * Dark values follow the system theme and a `.dark` ancestor.
+ */
+@source './';
+
+:root {
+  --shsg-primary: #123844;
+  --shsg-primary-hover: #0e2d38;
+  --shsg-primary-active: #0a222a;
+  --shsg-primary-foreground: #f7f4ef;
+
+  --shsg-secondary: #e8e2d6;
+  --shsg-secondary-hover: #ddd5c6;
+  --shsg-secondary-active: #d0c6b4;
+  --shsg-secondary-foreground: #1c1917;
+  --shsg-secondary-border: #d4cbbd;
+
+  --shsg-outline: #123844;
+  --shsg-outline-border: #123844;
+  --shsg-outline-hover: #12384412;
+  --shsg-outline-active: #1238441f;
+
+  --shsg-ghost: #1c1917;
+  --shsg-ghost-hover: #1c19170f;
+  --shsg-ghost-active: #1c19171a;
+
+  --shsg-link: #123844;
+  --shsg-link-hover: #0e2d38;
+
+  --shsg-danger: #9f1239;
+  --shsg-danger-hover: #881337;
+  --shsg-danger-active: #6e102d;
+  --shsg-danger-foreground: #fff7f8;
+  --shsg-danger-border: #881337;
+
+  --shsg-success: #166534;
+  --shsg-success-hover: #14532d;
+  --shsg-success-active: #114627;
+  --shsg-success-foreground: #f0fdf4;
+  --shsg-success-border: #14532d;
+
+  --shsg-warning: #f5c451;
+  --shsg-warning-hover: #e6b43a;
+  --shsg-warning-active: #d6a428;
+  --shsg-warning-foreground: #1c1403;
+  --shsg-warning-border: #a16207;
+
+  --shsg-soft: #e5f0f3;
+  --shsg-soft-hover: #d5e6eb;
+  --shsg-soft-active: #c5dbe2;
+  --shsg-soft-foreground: #123844;
+
+  --shsg-ring: #0f766e;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --shsg-primary: #8fc9d8;
+    --shsg-primary-hover: #a5d5e1;
+    --shsg-primary-active: #c3e4ec;
+    --shsg-primary-foreground: #062229;
+
+    --shsg-secondary: #2a2824;
+    --shsg-secondary-hover: #35322c;
+    --shsg-secondary-active: #403c35;
+    --shsg-secondary-foreground: #f6f1e8;
+    --shsg-secondary-border: #4a453c;
+
+    --shsg-outline: #c5e4ec;
+    --shsg-outline-border: #c5e4ec;
+    --shsg-outline-hover: #c5e4ec1a;
+    --shsg-outline-active: #c5e4ec2b;
+
+    --shsg-ghost: #f6f1e8;
+    --shsg-ghost-hover: #f6f1e814;
+    --shsg-ghost-active: #f6f1e81f;
+
+    --shsg-link: #9fd4e1;
+    --shsg-link-hover: #c5e4ec;
+
+    --shsg-danger: #fecdd3;
+    --shsg-danger-hover: #fda4af;
+    --shsg-danger-active: #fb7185;
+    --shsg-danger-foreground: #4c0519;
+    --shsg-danger-border: #fda4af;
+
+    --shsg-success: #bbf7d0;
+    --shsg-success-hover: #86efac;
+    --shsg-success-active: #4ade80;
+    --shsg-success-foreground: #052e16;
+    --shsg-success-border: #86efac;
+
+    --shsg-warning: #f5c451;
+    --shsg-warning-hover: #f8d178;
+    --shsg-warning-active: #f0b429;
+    --shsg-warning-foreground: #1c1403;
+    --shsg-warning-border: #fde68a;
+
+    --shsg-soft: #1a333b;
+    --shsg-soft-hover: #234550;
+    --shsg-soft-active: #2c5663;
+    --shsg-soft-foreground: #d5eef4;
+
+    --shsg-ring: #5eead4;
+  }
+}
+
+.dark {
+  --shsg-primary: #8fc9d8;
+  --shsg-primary-hover: #a5d5e1;
+  --shsg-primary-active: #c3e4ec;
+  --shsg-primary-foreground: #062229;
+
+  --shsg-secondary: #2a2824;
+  --shsg-secondary-hover: #35322c;
+  --shsg-secondary-active: #403c35;
+  --shsg-secondary-foreground: #f6f1e8;
+  --shsg-secondary-border: #4a453c;
+
+  --shsg-outline: #c5e4ec;
+  --shsg-outline-border: #c5e4ec;
+  --shsg-outline-hover: #c5e4ec1a;
+  --shsg-outline-active: #c5e4ec2b;
+
+  --shsg-ghost: #f6f1e8;
+  --shsg-ghost-hover: #f6f1e814;
+  --shsg-ghost-active: #f6f1e81f;
+
+  --shsg-link: #9fd4e1;
+  --shsg-link-hover: #c5e4ec;
+
+  --shsg-danger: #fecdd3;
+  --shsg-danger-hover: #fda4af;
+  --shsg-danger-active: #fb7185;
+  --shsg-danger-foreground: #4c0519;
+  --shsg-danger-border: #fda4af;
+
+  --shsg-success: #bbf7d0;
+  --shsg-success-hover: #86efac;
+  --shsg-success-active: #4ade80;
+  --shsg-success-foreground: #052e16;
+  --shsg-success-border: #86efac;
+
+  --shsg-warning: #f5c451;
+  --shsg-warning-hover: #f8d178;
+  --shsg-warning-active: #f0b429;
+  --shsg-warning-foreground: #1c1403;
+  --shsg-warning-border: #fde68a;
+
+  --shsg-soft: #1a333b;
+  --shsg-soft-hover: #234550;
+  --shsg-soft-active: #2c5663;
+  --shsg-soft-foreground: #d5eef4;
+
+  --shsg-ring: #5eead4;
+}
+
+@theme inline {
+  --color-shsg-primary: var(--shsg-primary);
+  --color-shsg-primary-hover: var(--shsg-primary-hover);
+  --color-shsg-primary-active: var(--shsg-primary-active);
+  --color-shsg-primary-foreground: var(--shsg-primary-foreground);
+
+  --color-shsg-secondary: var(--shsg-secondary);
+  --color-shsg-secondary-hover: var(--shsg-secondary-hover);
+  --color-shsg-secondary-active: var(--shsg-secondary-active);
+  --color-shsg-secondary-foreground: var(--shsg-secondary-foreground);
+  --color-shsg-secondary-border: var(--shsg-secondary-border);
+
+  --color-shsg-outline: var(--shsg-outline);
+  --color-shsg-outline-border: var(--shsg-outline-border);
+  --color-shsg-outline-hover: var(--shsg-outline-hover);
+  --color-shsg-outline-active: var(--shsg-outline-active);
+
+  --color-shsg-ghost: var(--shsg-ghost);
+  --color-shsg-ghost-hover: var(--shsg-ghost-hover);
+  --color-shsg-ghost-active: var(--shsg-ghost-active);
+
+  --color-shsg-link: var(--shsg-link);
+  --color-shsg-link-hover: var(--shsg-link-hover);
+
+  --color-shsg-danger: var(--shsg-danger);
+  --color-shsg-danger-hover: var(--shsg-danger-hover);
+  --color-shsg-danger-active: var(--shsg-danger-active);
+  --color-shsg-danger-foreground: var(--shsg-danger-foreground);
+  --color-shsg-danger-border: var(--shsg-danger-border);
+
+  --color-shsg-success: var(--shsg-success);
+  --color-shsg-success-hover: var(--shsg-success-hover);
+  --color-shsg-success-active: var(--shsg-success-active);
+  --color-shsg-success-foreground: var(--shsg-success-foreground);
+  --color-shsg-success-border: var(--shsg-success-border);
+
+  --color-shsg-warning: var(--shsg-warning);
+  --color-shsg-warning-hover: var(--shsg-warning-hover);
+  --color-shsg-warning-active: var(--shsg-warning-active);
+  --color-shsg-warning-foreground: var(--shsg-warning-foreground);
+  --color-shsg-warning-border: var(--shsg-warning-border);
+
+  --color-shsg-soft: var(--shsg-soft);
+  --color-shsg-soft-hover: var(--shsg-soft-hover);
+  --color-shsg-soft-active: var(--shsg-soft-active);
+  --color-shsg-soft-foreground: var(--shsg-soft-foreground);
+
+  --color-shsg-ring: var(--shsg-ring);
+}
+
+/* Shared field surfaces; applications can override these semantic tokens. */
+:root {
+  --shsg-field: #ffffff;
+  --shsg-field-muted: #f0eeea;
+  --shsg-muted: #625d56;
+  --shsg-modal-backdrop: #071c26b3;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --shsg-field: #111111;
+    --shsg-field-muted: #242321;
+    --shsg-muted: #b5afa5;
+  }
+}
+.dark {
+  --shsg-field: #111111;
+  --shsg-field-muted: #242321;
+  --shsg-muted: #b5afa5;
+}
+@theme inline {
+  --color-shsg-field: var(--shsg-field);
+  --color-shsg-field-muted: var(--shsg-field-muted);
+  --color-shsg-muted: var(--shsg-muted);
+}
+
+/* Modal stays in the native top layer until its exit transition completes. */
+.shsg-modal {
+  --shsg-modal-duration: 280ms;
+  --shsg-modal-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --shsg-modal-enter: none;
+  --shsg-modal-filter: none;
+  --shsg-modal-exit: none;
+  --shsg-modal-exit-filter: none;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--shsg-modal-duration) var(--shsg-modal-ease);
+}
+.shsg-modal[data-speed='fast'] {
+  --shsg-modal-duration: 160ms;
+}
+.shsg-modal[data-speed='slow'] {
+  --shsg-modal-duration: 450ms;
+}
+.shsg-modal[data-animation='scale'] {
+  --shsg-modal-enter: scale(0.94) translateY(8px);
+  --shsg-modal-exit: scale(0.97) translateY(6px);
+}
+.shsg-modal[data-animation='slide-up'] {
+  --shsg-modal-enter: translateY(40px);
+  --shsg-modal-exit: translateY(20px);
+}
+.shsg-modal[data-animation='slide-down'] {
+  --shsg-modal-enter: translateY(-40px);
+  --shsg-modal-exit: translateY(-20px);
+}
+.shsg-modal[data-animation='slide-left'] {
+  --shsg-modal-enter: translateX(56px);
+  --shsg-modal-exit: translateX(28px);
+}
+.shsg-modal[data-animation='slide-right'] {
+  --shsg-modal-enter: translateX(-56px);
+  --shsg-modal-exit: translateX(-28px);
+}
+.shsg-modal[data-animation='blur'] {
+  --shsg-modal-enter: scale(0.98);
+  --shsg-modal-filter: blur(8px);
+  --shsg-modal-exit: scale(0.985);
+  --shsg-modal-exit-filter: blur(4px);
+}
+/* A shorter ease-in exit avoids replaying the larger entrance movement. */
+.shsg-modal[data-state='closing'] {
+  --shsg-modal-duration: 220ms;
+  --shsg-modal-ease: cubic-bezier(0.4, 0, 1, 1);
+}
+.shsg-modal[data-state='closing'][data-speed='fast'] {
+  --shsg-modal-duration: 120ms;
+}
+.shsg-modal[data-state='closing'][data-speed='slow'] {
+  --shsg-modal-duration: 350ms;
+}
+.shsg-modal[data-animation='none'] {
+  --shsg-modal-duration: 0ms;
+}
+.shsg-modal[open]:not([data-state='closing']) {
+  opacity: 1;
+  pointer-events: auto;
+}
+.shsg-modal::backdrop {
+  background: var(--shsg-modal-backdrop);
+  opacity: 0;
+  transition: opacity var(--shsg-modal-duration) var(--shsg-modal-ease);
+}
+.shsg-modal[open]:not([data-state='closing'])::backdrop {
+  opacity: 1;
+}
+.shsg-modal-panel {
+  transform: var(--shsg-modal-exit);
+  filter: var(--shsg-modal-exit-filter);
+  transition:
+    transform var(--shsg-modal-duration) var(--shsg-modal-ease),
+    filter var(--shsg-modal-duration) ease;
+}
+.shsg-modal[open]:not([data-state='closing']) .shsg-modal-panel {
+  transform: none;
+  filter: none;
+}
+@starting-style {
+  .shsg-modal[open]:not([data-state='closing']),
+  .shsg-modal[open]:not([data-state='closing'])::backdrop {
+    opacity: 0;
+  }
+  .shsg-modal[open]:not([data-state='closing']) .shsg-modal-panel {
+    transform: var(--shsg-modal-enter);
+    filter: var(--shsg-modal-filter);
+  }
+}
+
+.shsg-type-motion {
+  animation: shsg-type-fade 500ms ease-out both;
+}
+
+.shsg-tab-indicator {
+  transition:
+    transform 280ms cubic-bezier(0.22, 1, 0.36, 1),
+    width 280ms cubic-bezier(0.22, 1, 0.36, 1),
+    height 280ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.shsg-tab-list[data-indicator-ready] > [role='tab'][aria-selected='true'] {
+  background: transparent;
+}
+.shsg-tab-list:not([data-indicator-ready])[data-style='underline'] > [role='tab'][aria-selected='true'] {
+  border-color: var(--shsg-primary);
+}
+.shsg-popup-motion {
+  animation: shsg-popup-in 140ms ease-out both;
+}
+@keyframes shsg-popup-in {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.shsg-accordion-content {
+  display: grid;
+  grid-template-rows: 0fr;
+  visibility: hidden;
+  transition:
+    grid-template-rows 220ms ease,
+    visibility 0s linear 220ms;
+}
+.shsg-accordion-content[data-open='true'] {
+  grid-template-rows: 1fr;
+  visibility: visible;
+  transition:
+    grid-template-rows 220ms ease,
+    visibility 0s;
+}
+
+.shsg-skeleton[data-animation='shimmer']::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--shsg-field) 65%, transparent), transparent);
+  animation: shsg-skeleton-shimmer 1.6s ease-in-out infinite;
+}
+@keyframes shsg-skeleton-shimmer {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+.shsg-tab-panel:not([hidden]) {
+  animation: shsg-type-fade 240ms ease-out both;
+}
+.shsg-tab-panel[data-animation='none'] {
+  animation: none;
+}
+.shsg-tab-panel[data-animation='slide-up'] {
+  animation-name: shsg-tabs-rise;
+}
+.shsg-tab-panel[data-animation='slide-left'] {
+  animation-name: shsg-tabs-slide;
+}
+.shsg-tab-panel[data-animation='scale'] {
+  animation-name: shsg-tabs-scale;
+}
+.shsg-tab-panel[data-animation='blur'] {
+  animation-name: shsg-tabs-blur;
+}
+@keyframes shsg-tabs-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes shsg-tabs-slide {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes shsg-tabs-scale {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes shsg-tabs-blur {
+  from {
+    opacity: 0;
+    filter: blur(5px);
+  }
+  to {
+    opacity: 1;
+    filter: none;
+  }
+}
+.shsg-type-motion:is(span, code, small, label) {
+  display: inline-block;
+}
+.shsg-type-motion[data-animation='slide-up'] {
+  animation-name: shsg-type-slide;
+}
+.shsg-type-motion[data-animation='blur-in'] {
+  animation-name: shsg-type-blur;
+}
+@keyframes shsg-type-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes shsg-type-slide {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes shsg-type-blur {
+  from {
+    opacity: 0;
+    filter: blur(6px);
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .shsg-tab-indicator,
+  .shsg-accordion-content {
+    transition: none;
+  }
+  .shsg-popup-motion {
+    animation: none;
+  }
+  .shsg-modal {
+    --shsg-modal-duration: 0ms !important;
+  }
+  .shsg-type-motion {
+    animation: none;
+  }
+  .shsg-tab-panel:not([hidden]) {
+    animation: none;
+  }
+  .shsg-skeleton[data-animation='shimmer']::after {
+    display: none;
+  }
+}

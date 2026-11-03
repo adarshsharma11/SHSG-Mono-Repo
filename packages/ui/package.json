@@ -1,0 +1,117 @@
+{
+  "name": "@shsg/ui",
+  "version": "0.1.0",
+  "private": true,
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "files": [
+    "src"
+  ],
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./button": {
+      "types": "./src/components/button/index.ts",
+      "default": "./src/components/button/index.ts"
+    },
+    "./styles.css": "./src/styles.css",
+    "./input": {
+      "types": "./src/components/input/index.ts",
+      "default": "./src/components/input/index.ts"
+    },
+    "./typography": {
+      "types": "./src/components/typography/index.ts",
+      "default": "./src/components/typography/index.ts"
+    },
+    "./modal": {
+      "types": "./src/components/modal/index.ts",
+      "default": "./src/components/modal/index.ts"
+    },
+    "./badge": {
+      "types": "./src/components/badge/index.ts",
+      "default": "./src/components/badge/index.ts"
+    },
+    "./alert": {
+      "types": "./src/components/alert/index.ts",
+      "default": "./src/components/alert/index.ts"
+    },
+    "./spinner": {
+      "types": "./src/components/spinner/index.tsx",
+      "default": "./src/components/spinner/index.tsx"
+    },
+    "./skeleton": {
+      "types": "./src/components/skeleton/index.tsx",
+      "default": "./src/components/skeleton/index.tsx"
+    },
+    "./card": {
+      "types": "./src/components/card/index.tsx",
+      "default": "./src/components/card/index.tsx"
+    },
+    "./section": {
+      "types": "./src/components/section/index.tsx",
+      "default": "./src/components/section/index.tsx"
+    },
+    "./tabs": {
+      "types": "./src/components/tabs/index.ts",
+      "default": "./src/components/tabs/index.ts"
+    },
+    "./dropdown-menu": {
+      "types": "./src/components/dropdown-menu/index.tsx",
+      "default": "./src/components/dropdown-menu/index.tsx"
+    },
+    "./tooltip": {
+      "types": "./src/components/tooltip/index.tsx",
+      "default": "./src/components/tooltip/index.tsx"
+    },
+    "./accordion": {
+      "types": "./src/components/accordion/index.tsx",
+      "default": "./src/components/accordion/index.tsx"
+    },
+    "./table": {
+      "types": "./src/components/table/index.tsx",
+      "default": "./src/components/table/index.tsx"
+    },
+    "./pagination": {
+      "types": "./src/components/pagination/index.tsx",
+      "default": "./src/components/pagination/index.tsx"
+    },
+    "./empty-state": {
+      "types": "./src/components/empty-state/index.tsx",
+      "default": "./src/components/empty-state/index.tsx"
+    },
+    "./api-explorer": {
+      "types": "./src/components/api-explorer/index.tsx",
+      "default": "./src/components/api-explorer/index.tsx"
+    }
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "jsdom": "^27.0.1",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "typescript": "^5",
+    "typescript-eslint": "^8",
+    "vitest": "^3.2.4"
+  },
+  "dependencies": {
+    "react-hook-form": "^7.91.0"
+  }
+}

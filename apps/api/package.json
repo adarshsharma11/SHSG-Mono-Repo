@@ -1,0 +1,15 @@
+{
+  "name": "@shsg/api",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "db:migrate": "uv run alembic upgrade head",
+    "db:current": "uv run alembic current",
+    "db:history": "uv run alembic history",
+    "db:revision": "uv run alembic revision --autogenerate",
+    "dev": "uv run uvicorn shsg_api.main:app --reload --host 0.0.0.0 --port 8000",
+    "test": "uv run pytest -m 'not integration'",
+    "lint": "uv run ruff check . && uv run ruff format --check .",
+    "typecheck": "uv run mypy src"
+  }
+}

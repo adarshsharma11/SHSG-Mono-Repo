@@ -1,0 +1,35 @@
+{
+  "name": "@shsg/api-client",
+  "version": "0.1.0",
+  "private": true,
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./proxy": {
+      "types": "./src/proxy.ts",
+      "default": "./src/proxy.ts"
+    },
+    "./config": {
+      "types": "./src/config.ts",
+      "default": "./src/config.ts"
+    }
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9",
+    "eslint": "^9",
+    "typescript": "^5",
+    "typescript-eslint": "^8",
+    "vitest": "^3.2.4"
+  },
+  "dependencies": {
+    "axios": "^1.21.0"
+  }
+}

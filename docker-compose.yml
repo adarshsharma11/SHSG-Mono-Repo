@@ -1,0 +1,59 @@
+x-api-environment: &api-environment
+  SHSG_ENVIRONMENT: local
+  SHSG_ENABLE_DEV_DIAGNOSTICS: ${SHSG_ENABLE_DEV_DIAGNOSTICS:-false}
+  SHSG_CORS_ORIGINS: ${SHSG_CORS_ORIGINS:-http://localhost:9001,http://localhost:9002}
+  SHSG_DATABASE_HOST: postgres
+  SHSG_DATABASE_PORT: '5432'
+  SHSG_DATABASE_NAME: ${POSTGRES_DB:-shsg}
+  SHSG_DATABASE_USER: ${POSTGRES_USER:-shsg}
+  SHSG_DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-shsg_local_password}
+  SHSG_DATABASE_TIMEOUT_SECONDS: '3'
+
+services:
+  postgres:
+    image: postgres:17-bookworm
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-shsg}
+      POSTGRES_USER: ${POSTGRES_USER:-shsg}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-shsg_local_password}
+    ports:
+      - '127.0.0.1:${POSTGRES_PORT:-5432}:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
+  migrate:
+    build:
+      context: ./apps/api
+    command: ['alembic', 'upgrade', 'head']
+    restart: 'no'
+    healthcheck:
+      disable: true
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment: *api-environment
+  api:
+    build:
+      context: ./apps/api
+    ports:
+      - '127.0.0.1:${API_PORT:-8000}:8000'
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    environment: *api-environment
+    healthcheck:
+      test: ['CMD', 'python', '-c', "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/ready')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+volumes:
+  postgres_data:
