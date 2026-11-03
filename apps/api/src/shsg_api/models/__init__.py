@@ -1,5 +1,6 @@
-"""SQLAlchemy metadata registry. Import future table models here for Alembic discovery."""
+"""SQLAlchemy metadata registry and model imports for Alembic discovery."""
 
 from shsg_api.models.base import Base
+from shsg_api.models.user import User
 
-__all__ = ["Base"]
+__all__ = ["Base", "User"]

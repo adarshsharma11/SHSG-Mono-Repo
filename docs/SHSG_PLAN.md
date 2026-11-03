@@ -14,7 +14,7 @@ Interaction direction: staggered hero entrance; a sticky header and progressive 
 
 - Responsive SHSG homepage at `/`, with the group and its two divisions introduced separately.
 - Common root-layout header/footer, data-driven navigation, and individual homepage section components.
-- Configurable new-tab Login links into the operations app. The app now has `/login` and `/signup` frontend pages sharing a Tailwind auth layout, with React Hook Form Controller and Yup validation. A tab-scoped mock AuthProvider/useAuth now supports signup, login, expiry, and logout, with a guarded sample estimate dashboard. Backend authentication, sessions, registration, and role enforcement remain unimplemented; Phase 1 is not complete.
+- Configurable new-tab Login links into the operations app. The app has `/login` and `/signup` pages sharing a Tailwind auth layout, with React Hook Form Controller and Yup validation. Its AuthProvider/useAuth uses persistent backend accounts for signup and login, retains the bearer session per browser tab, restores expiry, and guards the sample estimate dashboard. Server-side role enforcement and the remaining Phase 1 records and workflows are not implemented; Phase 1 is not complete.
 - Existing division websites linked directly, without rewriting or redirecting them.
 - A local project brief planner that suggests a division and downloads a text brief. It does not submit leads, upload files, quote a price, or book an appointment.
 - Shared Button, Typography, Select, Textarea, Modal, and Accordion components.

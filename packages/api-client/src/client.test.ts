@@ -96,6 +96,21 @@ describe('HTTP configuration', () => {
     });
   });
 });
+describe('operations authentication resource', () => {
+  it('posts typed signup and login payloads through the injected client', async () => {
+    const signupEnvelope = { success: true, data: { id: '1', full_name: 'Ada Lovelace', email: 'ada@example.com', phone: '+15551234567', created_at: '2026-11-03T00:00:00Z' }, error: null, message: 'Created' };
+    const signup = mockHttp(signupEnvelope);
+    const signupClient = new AppApiClient(signup.http);
+    await expect(signupClient.auth.signup({ full_name: 'Ada Lovelace', email: 'ada@example.com', phone: '+15551234567', password: 'a long secure password' })).resolves.toEqual(signupEnvelope);
+    expect(signup.adapter).toHaveBeenCalledWith(expect.objectContaining({ method: 'post', url: '/auth/signup', data: expect.stringContaining('Ada Lovelace') }));
+
+    const loginEnvelope = { success: true, data: { access_token: 'token', token_type: 'bearer', expires_in: 3600, user: signupEnvelope.data }, error: null, message: 'Signed in' };
+    const login = mockHttp(loginEnvelope);
+    const loginClient = new AppApiClient(login.http);
+    await expect(loginClient.auth.login({ email: 'ada@example.com', password: 'a long secure password' })).resolves.toEqual(loginEnvelope);
+    expect(login.adapter).toHaveBeenCalledWith(expect.objectContaining({ method: 'post', url: '/auth/login' }));
+  });
+});
 describe('server configuration and proxy', () => {
   it('freezes validated defaults and disables diagnostics outside development', () => {
     const config = readServerApiConfig({});

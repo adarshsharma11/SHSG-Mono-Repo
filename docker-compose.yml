@@ -8,6 +8,8 @@ x-api-environment: &api-environment
   SHSG_DATABASE_USER: ${POSTGRES_USER:-shsg}
   SHSG_DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-shsg_local_password}
   SHSG_DATABASE_TIMEOUT_SECONDS: '3'
+  SHSG_AUTH_JWT_SECRET: ${SHSG_AUTH_JWT_SECRET:-local-development-only-change-this-before-production-2026}
+  SHSG_AUTH_ACCESS_TOKEN_MINUTES: ${SHSG_AUTH_ACCESS_TOKEN_MINUTES:-60}
 
 services:
   postgres:

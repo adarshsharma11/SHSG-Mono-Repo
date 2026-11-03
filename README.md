@@ -15,7 +15,7 @@ The copied `apps/public-website` project is reference material. It is excluded f
 | `packages/api-client` | Shared typed API transport and proxy logic                | Used by both Next apps       |
 | `docker-compose.yml`  | Local API and PostgreSQL services                         | PostgreSQL: `127.0.0.1:5432` |
 
-Most UI showcases use local demo state. Both frontends now have a development API explorer with real backend requests. The service catalog remains static; there are no customer, booking, or invoice tables yet.
+Most UI showcases use local demo state. Both frontends now have a development API explorer with real backend requests. The operations app uses the API's persistent signup/login accounts through same-origin Next.js route handlers and keeps the bearer session scoped to the browser tab. The service catalog remains static; there are no customer, booking, or invoice tables yet.
 
 ## Quick start: API and database in one command
 
@@ -25,7 +25,7 @@ Install and start [Docker Desktop](https://docs.docker.com/get-started/get-docke
 docker compose up --build -d
 ```
 
-This builds the API and migration images, starts PostgreSQL, creates the `shsg` database/login on first initialization, and applies committed migrations before starting FastAPI. The baseline creates Alembic's `alembic_version` tracking table. No environment-file copy or manual SQL is required for the defaults. The first run downloads images and dependencies. After images are built, `docker compose up -d` starts the stack using those images; rebuild after adding code or migrations.
+This builds the API and migration images, starts PostgreSQL, creates the `shsg` database/login on first initialization, and applies committed migrations before starting FastAPI. Alembic records the current revision and creates the `users` table through `0002_create_users`. No environment-file copy or manual SQL is required for the local defaults. The first run downloads images and dependencies. After images are built, `docker compose up -d` starts the stack using those images; rebuild after adding code or migrations.
 
 ```bash
 docker compose ps
@@ -42,6 +42,8 @@ For startup that also waits until all services report healthy, use `docker compo
 | `/ready`                 | Runs `SELECT 1`; HTTP 200 `{"status":"ready","database":"ok"}` or HTTP 503 `{"status":"not_ready","database":"unavailable"}` |
 | `/services`              | Existing static service catalog                                                                                              |
 | `/services/{service_id}` | Existing static service detail, or 404                                                                                       |
+| `POST /auth/signup`      | Creates a persistent account from full name, email, phone, and password                                                      |
+| `POST /auth/login`       | Verifies email/password and returns a one-hour bearer token by default                                                       |
 
 Startup order is PostgreSQL healthy → `migrate` completes successfully → API starts. A migration failure blocks new API startup; a migration container with exit code 0 is expected. The API container health check uses `/ready`. Compose dependency conditions apply at startup and do not coordinate an already-running API with a later manual migration or automatically restart unhealthy services. Readiness recovers when PostgreSQL is available again.
 
@@ -113,14 +115,16 @@ The root `.env` controls Docker Compose. `apps/api/.env` controls a host-run API
 cp .env.example .env
 ```
 
-| Variable            | Default                                       | Purpose                                  |
-| ------------------- | --------------------------------------------- | ---------------------------------------- |
-| `POSTGRES_DB`       | `shsg`                                        | Database created on first initialization |
-| `POSTGRES_USER`     | `shsg`                                        | Local PostgreSQL bootstrap login         |
-| `POSTGRES_PASSWORD` | `shsg_local_password`                         | Local login password                     |
-| `POSTGRES_PORT`     | `5432`                                        | Published database port on the host      |
-| `API_PORT`          | `8000`                                        | Published API port on the host           |
-| `SHSG_CORS_ORIGINS` | `http://localhost:9001,http://localhost:9002` | Comma-separated frontend origins         |
+| Variable                         | Default                                       | Purpose                                                                          |
+| -------------------------------- | --------------------------------------------- | -------------------------------------------------------------------------------- |
+| `POSTGRES_DB`                    | `shsg`                                        | Database created on first initialization                                         |
+| `POSTGRES_USER`                  | `shsg`                                        | Local PostgreSQL bootstrap login                                                 |
+| `POSTGRES_PASSWORD`              | `shsg_local_password`                         | Local login password                                                             |
+| `POSTGRES_PORT`                  | `5432`                                        | Published database port on the host                                              |
+| `API_PORT`                       | `8000`                                        | Published API port on the host                                                   |
+| `SHSG_CORS_ORIGINS`              | `http://localhost:9001,http://localhost:9002` | Comma-separated frontend origins                                                 |
+| `SHSG_AUTH_JWT_SECRET`           | local-only example                            | HMAC signing secret; use at least 32 random characters and replace in production |
+| `SHSG_AUTH_ACCESS_TOKEN_MINUTES` | `60`                                          | Bearer-token lifetime in minutes                                                 |
 
 The container API connects to `postgres:5432` over the Compose network. Changing published host ports does not change internal addresses. Credentials are passed as separate driver parameters; the API does not construct a password-containing URL.
 
@@ -130,19 +134,21 @@ Initialization settings apply only to an empty PostgreSQL data directory. Changi
 
 ### Host API settings
 
-| Variable                        | Default                                       |
-| ------------------------------- | --------------------------------------------- |
-| `SHSG_ENVIRONMENT`              | `local`                                       |
-| `SHSG_LOG_LEVEL`                | `INFO`                                        |
-| `SHSG_CORS_ORIGINS`             | `http://localhost:9001,http://localhost:9002` |
-| `SHSG_DATABASE_HOST`            | `127.0.0.1`                                   |
-| `SHSG_DATABASE_PORT`            | `5432`                                        |
-| `SHSG_DATABASE_NAME`            | `shsg`                                        |
-| `SHSG_DATABASE_USER`            | `shsg`                                        |
-| `SHSG_DATABASE_PASSWORD`        | `shsg_local_password`                         |
-| `SHSG_DATABASE_TIMEOUT_SECONDS` | `3`                                           |
+| Variable                         | Default                                       |
+| -------------------------------- | --------------------------------------------- |
+| `SHSG_ENVIRONMENT`               | `local`                                       |
+| `SHSG_LOG_LEVEL`                 | `INFO`                                        |
+| `SHSG_CORS_ORIGINS`              | `http://localhost:9001,http://localhost:9002` |
+| `SHSG_DATABASE_HOST`             | `127.0.0.1`                                   |
+| `SHSG_DATABASE_PORT`             | `5432`                                        |
+| `SHSG_DATABASE_NAME`             | `shsg`                                        |
+| `SHSG_DATABASE_USER`             | `shsg`                                        |
+| `SHSG_DATABASE_PASSWORD`         | `shsg_local_password`                         |
+| `SHSG_DATABASE_TIMEOUT_SECONDS`  | `3`                                           |
+| `SHSG_AUTH_JWT_SECRET`           | Local-only development value                  |
+| `SHSG_AUTH_ACCESS_TOKEN_MINUTES` | `60`                                          |
 
-Match host settings to initialized database credentials. Readiness uses a short-lived asynchronous Psycopg connection with an overall deadline. Password settings are masked; raw driver errors are not returned by `/ready`. SQLAlchemy supplies the model metadata registry and Alembic handles migrations. There is no business schema or application connection pool yet; the static catalog remains unchanged.
+Match host settings to initialized database credentials. Readiness uses a short-lived asynchronous Psycopg connection with an overall deadline. Password settings are masked; raw driver errors are not returned by `/ready`. SQLAlchemy supplies an async application session pool and the model metadata registry; Alembic handles schema changes. Production refuses the local JWT secret. The static catalog remains unchanged.
 
 ## Database access and lifecycle
 
@@ -159,7 +165,7 @@ SELECT current_database(), current_user, version();
 SELECT 1;
 ```
 
-Use `\dt` to list tables and `\q` to exit. After the migration service succeeds, `alembic_version` records `0001_baseline`; there are no business tables yet. Desktop clients can connect through `127.0.0.1`, the published database port, and the credentials above.
+Use `\dt` to list tables and `\q` to exit. After the migration service succeeds, `alembic_version` records `0002_create_users`, and `users` stores persistent accounts with Argon2 password hashes. Desktop clients can connect through `127.0.0.1`, the published database port, and the credentials above.
 
 ```bash
 docker compose logs -f api postgres
@@ -249,12 +255,12 @@ apps/api/
 ├── migrations/
 │   ├── env.py
 │   ├── script.py.mako
-│   └── versions/0001_baseline.py
+│   └── versions/{0001_baseline,0002_create_users}.py
 └── src/shsg_api/
     ├── main.py
     ├── api/
     │   ├── router.py
-    │   └── routes/{health,services,bookings,diagnostics}.py
+    │   └── routes/{auth,health,services,bookings,diagnostics}.py
     ├── services/
     ├── repositories/
     ├── schemas/
@@ -262,7 +268,7 @@ apps/api/
     └── core/
 ```
 
-Route handlers own HTTP behavior, services own application logic, schemas define request/response contracts, and models register SQLAlchemy metadata. Repositories are reserved for future database queries. The bookings router is a placeholder until its schema and endpoints are defined. Existing HTTP paths remain unchanged.
+Route handlers own HTTP behavior, services own application logic, schemas define request/response contracts, repositories own database queries, and models register SQLAlchemy metadata. Authentication follows this layering; the bookings router remains a placeholder.
 
 Inspect/apply migrations using the Docker image:
 

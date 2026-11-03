@@ -4,7 +4,10 @@ import { describe, expect, it, vi } from 'vitest';
 import { AuthForm } from './auth-form';
 
 describe('authentication forms', () => {
-  it.each(['login', 'signup'] as const)('requires both fields in %s and focuses the first error', async (mode) => {
+  it.each([
+    ['login', 'Enter your email address.', /email address/i],
+    ['signup', 'Enter your full name.', /full name/i],
+  ] as const)('requires fields in %s and focuses the first error', async (mode, errorMessage, firstField) => {
     const user = userEvent.setup();
     const submit = vi.fn();
     render(<AuthForm mode={mode} onSubmit={submit} />);
@@ -13,8 +16,8 @@ describe('authentication forms', () => {
         name: mode === 'login' ? 'Sign in' : 'Create account',
       }),
     );
-    expect(await screen.findByText('Enter your email address.')).toBeInTheDocument();
-    expect(screen.getByLabelText(/email address/i)).toHaveFocus();
+    expect(await screen.findByText(errorMessage)).toBeInTheDocument();
+    expect(screen.getByLabelText(firstField)).toHaveFocus();
     expect(screen.getByLabelText(/^password/i)).toHaveAttribute('aria-invalid', 'true');
     expect(submit).not.toHaveBeenCalled();
   });
@@ -34,16 +37,20 @@ describe('authentication forms', () => {
     const user = userEvent.setup();
     const submit = vi.fn().mockResolvedValue(undefined);
     render(<AuthForm mode="signup" onSubmit={submit} />);
+    await user.type(screen.getByLabelText(/full name/i), '  Ada   Lovelace  ');
+    await user.type(screen.getByLabelText(/phone number/i), '+1 (555) 123-4567');
     await user.type(screen.getByLabelText(/email address/i), '  owner@example.com  ');
     await user.type(screen.getByLabelText(/^password/i), 'short');
     await user.click(screen.getByRole('button', { name: 'Create account' }));
-    expect(await screen.findByText('Use at least 12 characters.')).toBeInTheDocument();
+    expect(await screen.findByText('Use at least 8 characters.')).toBeInTheDocument();
     expect(submit).not.toHaveBeenCalled();
     await user.clear(screen.getByLabelText(/^password/i));
     await user.type(screen.getByLabelText(/^password/i), 'a long passphrase');
     await user.click(screen.getByRole('button', { name: 'Create account' }));
     await waitFor(() =>
       expect(submit).toHaveBeenCalledWith({
+        fullName: 'Ada Lovelace',
+        phone: '+15551234567',
         email: 'owner@example.com',
         password: 'a long passphrase',
       }),
@@ -111,6 +118,6 @@ describe('authentication forms', () => {
     expect(screen.getByLabelText(/^password/i)).toHaveAttribute('type', 'password');
     expect(screen.getByLabelText(/^password/i)).toHaveAttribute('autocomplete', autocomplete);
     expect(screen.queryByRole('tab')).not.toBeInTheDocument();
-    expect(screen.getAllByRole('textbox')).toHaveLength(1);
+    expect(screen.getAllByRole('textbox')).toHaveLength(mode === 'signup' ? 3 : 1);
   });
 });

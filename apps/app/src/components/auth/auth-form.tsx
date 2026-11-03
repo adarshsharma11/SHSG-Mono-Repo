@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { MockAuthError, DEMO_CREDENTIALS } from '../../lib/auth/mock-auth';
+import { AuthError } from '../../lib/auth/auth-client';
 import { Controller, useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Button, Input } from '@shsg/ui';
@@ -21,11 +21,10 @@ export function AuthForm({ mode, onSubmit }: AuthFormProps) {
     setError,
     clearErrors,
     resetField,
-    setValue,
     formState: { errors, isSubmitting },
   } = useForm<AuthValues>({
     resolver: yupResolver(signup ? signupSchema : loginSchema),
-    defaultValues: { email: '', password: '' },
+    defaultValues: { fullName: '', phone: '', email: '', password: '' },
     mode: 'onBlur',
     reValidateMode: 'onChange',
   });
@@ -42,7 +41,7 @@ export function AuthForm({ mode, onSubmit }: AuthFormProps) {
       await onSubmit(values);
     } catch (error) {
       setError('root.server', {
-        message: error instanceof MockAuthError ? error.message : signup ? 'We couldn’t create your account. Please try again.' : 'We couldn’t sign you in. Please try again.',
+        message: error instanceof AuthError ? error.message : signup ? 'We couldn’t create your account. Please try again.' : 'We couldn’t sign you in. Please try again.',
       });
     } finally {
       resetField('password');
@@ -58,25 +57,11 @@ export function AuthForm({ mode, onSubmit }: AuthFormProps) {
           {signup ? 'Sign in' : 'Create an account'}
         </Link>
       </p>
-      <div className="mt-6 rounded-xl border border-[#62dba1]/20 bg-[#62dba1]/5 px-4 py-3 text-xs leading-6 text-[#c3d6c9]">
-        Demo workspace. Use sample details, not a real password.
-        {!signup && (
-          <button
-            type="button"
-            className="mt-1 block cursor-pointer font-medium text-[#62dba1] underline underline-offset-4"
-            onClick={() => {
-              setValue('email', DEMO_CREDENTIALS.email);
-              setValue('password', DEMO_CREDENTIALS.password);
-              clearErrors();
-            }}
-          >
-            Use demo account
-          </button>
-        )}
-      </div>
       <form className="mt-9 space-y-6" onSubmit={submit} noValidate aria-label={signup ? 'Create an account' : 'Sign in'} aria-busy={isSubmitting}>
+        {signup && <Controller name="fullName" control={control} render={({ field, fieldState }) => <Input {...field} label="Full name" autoComplete="name" placeholder="Your full name" required size="lg" disabled={isSubmitting} error={fieldState.error?.message} className="min-h-[52px] rounded-xl" />} />}
+        {signup && <Controller name="phone" control={control} render={({ field, fieldState }) => <Input {...field} label="Phone number" type="tel" inputMode="tel" autoComplete="tel" placeholder="+1 555 123 4567" required size="lg" disabled={isSubmitting} error={fieldState.error?.message} className="min-h-[52px] rounded-xl" />} />}
         <Controller name="email" control={control} render={({ field, fieldState }) => <Input {...field} label="Email address" type="email" inputMode="email" autoComplete="email" autoCapitalize="none" spellCheck={false} placeholder="you@example.com" required size="lg" disabled={isSubmitting} error={fieldState.error?.message} className="min-h-[52px] rounded-xl" />} />
-        <Controller name="password" control={control} render={({ field, fieldState }) => <Input {...field} label="Password" type="password" autoComplete={signup ? 'new-password' : 'current-password'} placeholder={signup ? 'Create your password' : 'Enter your password'} required size="lg" disabled={isSubmitting} description={signup ? 'Use 12–128 characters. A longer passphrase works well.' : undefined} error={fieldState.error?.message} className="min-h-[52px] rounded-xl" />} />
+        <Controller name="password" control={control} render={({ field, fieldState }) => <Input {...field} label="Password" type="password" autoComplete={signup ? 'new-password' : 'current-password'} placeholder={signup ? 'Create your password' : 'Enter your password'} required size="lg" disabled={isSubmitting} description={signup ? 'Use 8–128 characters. A longer passphrase works well.' : undefined} error={fieldState.error?.message} className="min-h-[52px] rounded-xl" />} />
         {errors.root?.server?.message && (
           <p role="alert" className="rounded-xl border border-[#e4b46b]/30 bg-[#e4b46b]/10 px-4 py-3 text-sm leading-6 text-[#f4cf96]">
             {errors.root.server.message}

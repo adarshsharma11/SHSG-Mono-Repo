@@ -1,4 +1,4 @@
-import axios, { type AxiosInstance } from 'axios';
+import axios, { type AxiosInstance, type AxiosResponse } from 'axios';
 import { ApiError } from './ApiError';
 export { ApiError } from './ApiError';
 export type { AxiosInstance } from 'axios';
@@ -25,9 +25,9 @@ export function createHttpClient({ baseUrl, timeoutMs = 5000 }: HttpClientOption
   });
 }
 
-export async function getData<T>(http: AxiosInstance, path: string, signal?: AbortSignal): Promise<T> {
+async function requestData<T>(request: Promise<AxiosResponse<T>>, signal?: AbortSignal): Promise<T> {
   try {
-    const { data } = await http.get<T>(path, { signal });
+    const { data } = await request;
     return data;
   } catch (error) {
     if (error instanceof ApiError) throw error;
@@ -40,4 +40,12 @@ export async function getData<T>(http: AxiosInstance, path: string, signal?: Abo
     }
     throw new ApiError('The API could not be reached.', 502, 'NETWORK_ERROR');
   }
+}
+
+export function getData<T>(http: AxiosInstance, path: string, signal?: AbortSignal): Promise<T> {
+  return requestData(http.get<T>(path, { signal }), signal);
+}
+
+export function postData<T, Body>(http: AxiosInstance, path: string, body: Body, signal?: AbortSignal): Promise<T> {
+  return requestData(http.post<T>(path, body, { signal }), signal);
 }
