@@ -16,13 +16,15 @@
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
+      "eslint --fix --max-warnings=0",
       "prettier --write"
     ],
-    "*.{json,md,mdx,yml,yaml,css,scss}": [
+    "*.{json,md,mdx,css,scss,yml,yaml}": [
       "prettier --write"
     ]
   },
   "devDependencies": {
+    "eslint": "^10.14.0",
     "husky": "^9.1.7",
     "lint-staged": "^17.6.0",
     "prettier": "^3.9.10",

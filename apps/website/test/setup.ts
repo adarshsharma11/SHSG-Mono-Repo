@@ -1,0 +1,16 @@
+import { cleanup } from '@testing-library/react';
+import { afterEach, vi } from 'vitest';
+import '@testing-library/jest-dom/vitest';
+
+afterEach(() => {
+  cleanup();
+  vi.restoreAllMocks();
+});
+
+// jsdom has no browser top-layer dialog implementation.
+HTMLDialogElement.prototype.showModal = function () {
+  this.open = true;
+};
+HTMLDialogElement.prototype.close = function () {
+  this.open = false;
+};
