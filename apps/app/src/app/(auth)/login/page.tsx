@@ -5,7 +5,7 @@ import { AuthScreen } from '@/components/auth/auth-screen';
 export const metadata: Metadata = {
   title: 'Sign in | Southern Home Services Group',
 };
-console.log('login page');
+
 export default function LoginPage() {
   return (
     <GuestAccess>
