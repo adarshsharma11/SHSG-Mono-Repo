@@ -8,7 +8,9 @@ export function AlertExamples() {
   const [saved, setSaved] = useState(false);
   const restoreRef = useRef<HTMLButtonElement>(null);
   useEffect(() => {
-    if (!visible) restoreRef.current?.focus();
+    if (!visible) {
+      restoreRef.current?.focus();
+    }
   }, [visible]);
   return (
     <>

@@ -31,7 +31,9 @@ export function ProjectPlanner() {
   }
 
   function downloadBrief() {
-    if (!brief) return;
+    if (!brief) {
+      return;
+    }
     const text = `SHSG project brief\n\nProject: ${brief.project}\n\n${brief.description}\n\nSuggested starting point: ${brief.division.name}\n${brief.division.href}\n\nPrepared locally. This brief has not been submitted and is not a booking or estimate.\n`;
     const url = URL.createObjectURL(new Blob([text], { type: 'text/plain;charset=utf-8' }));
     const link = document.createElement('a');
@@ -61,7 +63,9 @@ export function ProjectPlanner() {
           maxLength={2000}
           error={error || undefined}
           onChange={() => {
-            if (error) setError('');
+            if (error) {
+              setError('');
+            }
           }}
         />
         <Button type="submit" size="lg" fullWidth>

@@ -103,7 +103,9 @@ export function EstimateWorkspace() {
                       value={item.quantity}
                       onChange={(event) => {
                         const value = Number(event.target.value);
-                        if (Number.isFinite(value) && value >= 0 && value <= 10000) setItems((current) => current.map((row) => (row.id === item.id ? { ...row, quantity: value } : row)));
+                        if (Number.isFinite(value) && value >= 0 && value <= 10000) {
+                          setItems((current) => current.map((row) => (row.id === item.id ? { ...row, quantity: value } : row)));
+                        }
                       }}
                       className="min-h-9 w-16 rounded-md border border-[#dce5df] bg-white px-2 text-sm"
                     />

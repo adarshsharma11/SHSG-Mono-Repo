@@ -33,10 +33,14 @@ export function AuthProvider({ children, operations = defaultOperations }: { chi
     };
   }, []);
   useEffect(() => {
-    if (!session) return;
+    if (!session) {
+      return;
+    }
     const timeout = window.setTimeout(signOut, Math.max(0, session.expiresAt - Date.now()));
     const checkExpiry = () => {
-      if (session.expiresAt <= Date.now()) signOut();
+      if (session.expiresAt <= Date.now()) {
+        signOut();
+      }
     };
     window.addEventListener('focus', checkExpiry);
     document.addEventListener('visibilitychange', checkExpiry);
