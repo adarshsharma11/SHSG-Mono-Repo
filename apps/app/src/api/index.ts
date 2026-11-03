@@ -5,5 +5,3 @@ export { ApiClient } from './ApiClient';
 export function createApiClient(options: HttpClientOptions) {
   return new ApiClient(createHttpClient(options));
 }
-
-console.log('This is a test file for Husky pre-commit hooks.');
