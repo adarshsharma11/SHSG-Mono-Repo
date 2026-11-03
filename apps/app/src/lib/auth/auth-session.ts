@@ -1,4 +1,4 @@
-import type { LoginResponse } from '@shsg/api-client';
+import type { LoginResponse } from '../../api/resources/Auth';
 
 export const SESSION_KEY = 'shsg.auth.session';
 const MAX_SESSION_DURATION = 24 * 60 * 60 * 1000;
@@ -17,7 +17,9 @@ export interface AuthSession {
 }
 
 function isUser(value: unknown): value is AuthUser {
-  if (!value || typeof value !== 'object') { return false; }
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
   const user = value as Partial<AuthUser>;
   return typeof user.id === 'string' && typeof user.email === 'string' && typeof user.name === 'string' && typeof user.phone === 'string';
 }
@@ -49,7 +51,7 @@ export function restoreSession(): AuthSession | null {
     const value = raw ? (JSON.parse(raw) as Partial<AuthSession>) : null;
     const now = Date.now();
     if (value && isUser(value.user) && typeof value.token === 'string' && value.token.length > 20 && typeof value.expiresAt === 'number' && Number.isFinite(value.expiresAt) && value.expiresAt > now && value.expiresAt <= now + MAX_SESSION_DURATION) {
-       return value as AuthSession;
+      return value as AuthSession;
     }
   } catch {
     // Invalid or unavailable storage is handled as a signed-out session.

@@ -35,30 +35,3 @@ export interface ApiResponse<T> {
   error: ApiErrorBody | null;
   message: string | null;
 }
-
-export interface AuthUser {
-  id: string;
-  full_name: string;
-  email: string;
-  phone: string;
-  created_at: string;
-}
-
-export interface SignupRequest {
-  full_name: string;
-  email: string;
-  phone: string;
-  password: string;
-}
-
-export interface LoginRequest {
-  email: string;
-  password: string;
-}
-
-export interface LoginResponse {
-  access_token: string;
-  token_type: 'bearer';
-  expires_in: number;
-  user: AuthUser;
-}

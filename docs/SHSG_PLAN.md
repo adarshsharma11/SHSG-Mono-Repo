@@ -6,7 +6,7 @@ Source: _SHSG Revised Technical Partner Proposal_, October 2026, supplied by the
 
 Build one useful entry point for the Southern Home family while keeping Southern Home Handyman and Boxwood distinct. The homepage helps people identify their project, understand which brand to approach, and prepare the first conversation. Preserve the existing domains, inquiry paths, and useful content during the transition.
 
-Visual direction: the supplied Handoff/YourGPT screenshots inform spacious sans-serif typography, deep green surfaces, mint emphasis, rounded photography, and clear service blocks. Content remains specific to SHSG’s homeowner experience. Page sequence: centered hero with a home photograph, service choices, two division introductions, three practical steps, local project planner, FAQs, and a grouped footer.
+Visual direction: the supplied Handoff/YourGPT screenshots inform spacious sans-serif typography, navy (#1B2951) surfaces, pale-blue emphasis, rounded photography, and clear service blocks. Content remains specific to SHSG’s homeowner experience. Page sequence: centered hero with a home photograph, service choices, two division introductions, three practical steps, local project planner, FAQs, and a grouped footer.
 
 Interaction direction: staggered hero entrance; a sticky header and progressive image depth; restrained link, image, and shared accordion/modal transitions. Respect reduced motion. Keep meaningful content visible without animation support.
 

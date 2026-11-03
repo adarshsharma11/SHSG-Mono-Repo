@@ -1,4 +1,4 @@
-import type { LoginRequest } from '@shsg/api-client';
+import type { LoginRequest } from '@/api/resources/Auth';
 import { proxyApi } from '@/lib/api.server';
 
 export async function POST(request: Request) {

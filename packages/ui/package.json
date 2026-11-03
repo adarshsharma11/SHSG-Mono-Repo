@@ -85,6 +85,10 @@
     "./api-explorer": {
       "types": "./src/components/api-explorer/index.tsx",
       "default": "./src/components/api-explorer/index.tsx"
+    },
+    "./logo": {
+      "types": "./src/components/logo/index.tsx",
+      "default": "./src/components/logo/index.tsx"
     }
   },
   "scripts": {

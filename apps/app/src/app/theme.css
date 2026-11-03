@@ -1,0 +1,90 @@
+/* Match the website brand palette; app layouts choose light or dark surfaces. */
+:root {
+  --app-primary: #1b2951;
+  --app-primary-hover: #263a6d;
+  --app-primary-active: #14203f;
+  --app-accent: #b3c3f0;
+  --app-ink: #1d2640;
+  --app-muted: #596378;
+  --app-border: #dce2ef;
+  --app-surface: #f2f5fb;
+  --app-canvas: #f5f7fc;
+  --app-selection: #e8edf9;
+  --app-ring: #526fba;
+  --app-on-brand: #ffffff;
+  --app-on-brand-muted: #ccd6ed;
+  --app-auth-field: #23345e;
+
+  --shsg-primary: var(--app-primary);
+  --shsg-primary-hover: var(--app-primary-hover);
+  --shsg-primary-active: var(--app-primary-active);
+  --shsg-primary-foreground: #ffffff;
+  --shsg-field: #ffffff;
+  --shsg-field-muted: var(--app-surface);
+  --shsg-ghost: var(--app-ink);
+  --shsg-ghost-hover: #1b29510f;
+  --shsg-ghost-active: #1b29511a;
+  --shsg-muted: var(--app-muted);
+  --shsg-secondary: #e8edf7;
+  --shsg-secondary-hover: #dde5f4;
+  --shsg-secondary-active: #cfdaf0;
+  --shsg-secondary-foreground: var(--app-primary);
+  --shsg-secondary-border: var(--app-border);
+  --shsg-outline: var(--app-primary);
+  --shsg-outline-border: var(--app-border);
+  --shsg-outline-hover: #1b295112;
+  --shsg-outline-active: #1b29511f;
+  --shsg-link: var(--app-primary);
+  --shsg-link-hover: var(--app-primary-hover);
+  --shsg-soft: var(--app-selection);
+  --shsg-soft-hover: #dde5f5;
+  --shsg-soft-active: #d0dbf0;
+  --shsg-soft-foreground: var(--app-primary);
+  --shsg-ring: var(--app-ring);
+  --shsg-danger: #9f1239;
+  --shsg-danger-hover: #881337;
+  --shsg-danger-active: #6e102d;
+  --shsg-danger-foreground: #fff7f8;
+  --shsg-danger-border: #881337;
+  --shsg-success: #166534;
+  --shsg-success-hover: #14532d;
+  --shsg-success-active: #114627;
+  --shsg-success-foreground: #f0fdf4;
+  --shsg-success-border: #14532d;
+  --shsg-warning: #f5c451;
+  --shsg-warning-hover: #e6b43a;
+  --shsg-warning-active: #d6a428;
+  --shsg-warning-foreground: #1c1403;
+  --shsg-warning-border: #a16207;
+}
+
+/* Pale controls on navy auth pages mirror the website's dark-surface CTAs. */
+[data-auth-frame] {
+  --shsg-primary: var(--app-accent);
+  --shsg-primary-hover: #d0dbf6;
+  --shsg-primary-active: #a0b5e8;
+  --shsg-primary-foreground: var(--app-primary);
+  --shsg-field: var(--app-auth-field);
+  --shsg-field-muted: var(--app-primary-hover);
+  --shsg-ghost: var(--app-on-brand);
+  --shsg-muted: var(--app-on-brand-muted);
+  --shsg-secondary-border: #61739e;
+  --shsg-ring: var(--app-accent);
+  --shsg-danger: #fda4af;
+}
+
+@theme inline {
+  --color-app-primary: var(--app-primary);
+  --color-app-primary-hover: var(--app-primary-hover);
+  --color-app-primary-active: var(--app-primary-active);
+  --color-app-accent: var(--app-accent);
+  --color-app-ink: var(--app-ink);
+  --color-app-muted: var(--app-muted);
+  --color-app-border: var(--app-border);
+  --color-app-surface: var(--app-surface);
+  --color-app-canvas: var(--app-canvas);
+  --color-app-selection: var(--app-selection);
+  --color-app-ring: var(--app-ring);
+  --color-app-on-brand: var(--app-on-brand);
+  --color-app-on-brand-muted: var(--app-on-brand-muted);
+}

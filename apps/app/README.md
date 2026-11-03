@@ -66,3 +66,9 @@ Tests cover form validation, the typed auth resource, signup/login through useAu
 Manual checks: review 320/390px, tablet, and desktop widths; use Tab and Enter; blur invalid fields; submit empty and valid forms; create an account; reload the dashboard; log out and sign back in; follow login/signup links; check password-manager autofill and focus/error announcements; confirm the promotional panel does not crowd the mobile form.
 
 The developer API explorer remains available at `/api` in development. See the [API-client README](../../packages/api-client/README.md) for environment configuration and the [SHSG plan](../../docs/SHSG_PLAN.md) for the backend roadmap.
+
+## App theme
+
+The app uses the website's **#1B2951** primary color, navy hover/active shades, and pale-blue accents. `src/app/theme.css` defines the palette once and maps it to Tailwind `app-*` colors and shared UI tokens. Dashboard controls, selected rows, links, avatars, focus rings, and popups use this palette. Auth pages keep a dark navy composition with pale-blue action controls for contrast. Error, warning, and success colors remain semantic.
+
+Brand declarations no longer repeat on individual layout elements. Shared popups inherit the app palette from the document root, including portals rendered under body. The auth frame scopes its dark field and control tokens without changing dashboard surfaces or authentication behavior.

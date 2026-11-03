@@ -1,0 +1,38 @@
+/* Website palette. Shared UI components inherit these tokens without retheming the app. */
+.site-shell,
+.home-brief-modal {
+  --site-primary: #1b2951;
+  --site-primary-hover: #263a6d;
+  --site-primary-active: #14203f;
+  --site-accent: #b3c3f0;
+  --site-ink: #1d2640;
+  --site-muted: #596378;
+  --site-border: #dce2ef;
+  --site-surface: #f2f5fb;
+  --site-header-height: 84px;
+
+  --shsg-primary: var(--site-primary);
+  --shsg-primary-hover: var(--site-primary-hover);
+  --shsg-primary-active: var(--site-primary-active);
+  --shsg-primary-foreground: #ffffff;
+  --shsg-ghost: var(--site-ink);
+  --shsg-muted: var(--site-muted);
+  --shsg-field: #ffffff;
+  --shsg-field-muted: var(--site-surface);
+  --shsg-secondary: #e8edf7;
+  --shsg-secondary-hover: #dde5f4;
+  --shsg-secondary-active: #cfdaf0;
+  --shsg-secondary-foreground: var(--site-primary);
+  --shsg-secondary-border: var(--site-border);
+  --shsg-outline: var(--site-primary);
+  --shsg-outline-border: var(--site-primary);
+  --shsg-outline-hover: #1b295112;
+  --shsg-outline-active: #1b29511f;
+  --shsg-link: var(--site-primary);
+  --shsg-link-hover: var(--site-primary-hover);
+  --shsg-soft: #e8edf9;
+  --shsg-soft-hover: #dde5f5;
+  --shsg-soft-active: #d0dbf0;
+  --shsg-soft-foreground: var(--site-primary);
+  --shsg-ring: #526fba;
+}

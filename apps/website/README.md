@@ -36,7 +36,7 @@ content/divisions.ts        # Brand information reused across the website
 
 The structure follows the reference public website’s separation of header/footer and content components, adapted to App Router layouts with minimal client boundaries. Navigation uses regular links and disclosure buttons, rather than ARIA application menus. Links back to homepage sections use `/#section` so they also work from other routes.
 
-The design takes direction from the supplied Handoff/YourGPT screenshots: spacious sans-serif typography, deep green surfaces, mint emphasis, rounded photography and controls, clear service blocks, and grouped footer links. SHSG content remains focused on homeowners and its two divisions; no third-party AI features, statistics, or certifications are claimed.
+The design takes direction from the supplied Handoff/YourGPT screenshots: spacious sans-serif typography, navy surfaces, pale-blue emphasis, rounded photography and controls, clear service blocks, and grouped footer links. SHSG content remains focused on homeowners and its two divisions; no third-party AI features, statistics, or certifications are claimed.
 
 The homepage uses shared UI components from `@shsg/ui`. The planner does not submit a lead or book a visit. It downloads a brief locally and links to the relevant existing division website. Neither AI, pricing, scheduling, nor payment is connected to this page.
 
@@ -84,6 +84,14 @@ The header uses icon-led dropdown rows with a compact 38px desktop Login control
 
 Desktop chevrons rotate around their center; mobile menu lines transition into a close icon. Both dropdowns and the mobile panel transition in and out. Panels stay mounted while closing, with inert, aria-hidden, and removed tab stops making them non-interactive immediately. Escape restores trigger focus; outside clicks, link selection, and viewport breakpoint changes close menus. Reduced motion removes animation. The mobile panel overlays content rather than shifting the page.
 
-The page review also corrected green heading contrast on light backgrounds, matched image sizes to actual content widths, removed the sticky-header blur layer, reserved image dimensions, and added minimum-width safeguards for long grid content. The homepage and header remain CSS-driven without an added animation library.
+The page review also corrected heading contrast on light backgrounds, matched image sizes to actual content widths, removed the sticky-header blur layer, reserved image dimensions, and added minimum-width safeguards for long grid content. The homepage and header remain CSS-driven without an added animation library.
 
 Before release, visually review 320/390px, tablet, and desktop widths, dropdown opening/closing, mobile scrolling, keyboard focus, and reduced motion. Automated interaction checks do not replace visual testing; a connected browser was unavailable during this implementation.
+
+## Website theme and shared logo
+
+The brand color is **#1B2951**. `components/site/theme.css` owns the website palette, including primary hover/active colors, pale-blue accents, neutral surfaces, and the shared UI tokens. Header, hero, planner, buttons, links, and navigation icons use these tokens. Changing this palette does not change the operations app's control theme.
+
+The website Brand wrapper uses `Logo` from `@shsg/ui/logo`. Its url prop controls the destination; dark headers use the light variant. The same shared logo is used by the app's auth pages and dashboard sidebar. See the [shared logo API](../../packages/ui/README.md#logo).
+
+The supplied magnolia artwork lives at `public/images/brand/logo.webp` in each frontend. Logo uses the framework image component, preserves its 486×374 aspect ratio, and requests a small responsive image size suitable for the header/sidebar.

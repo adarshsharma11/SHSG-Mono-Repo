@@ -18,3 +18,4 @@ export * from './components/table';
 export * from './components/pagination';
 export * from './components/empty-state';
 export * from './components/api-explorer';
+export * from './components/logo';

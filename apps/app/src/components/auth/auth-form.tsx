@@ -50,10 +50,10 @@ export function AuthForm({ mode, onSubmit }: AuthFormProps) {
 
   return (
     <div className="w-full max-w-[400px]">
-      <h1 className="text-[32px] leading-tight font-semibold tracking-[-0.045em] text-[#f4f7f4] sm:text-[38px]">{signup ? 'Make yourself at home.' : 'Welcome back.'}</h1>
-      <p className="mt-4 text-sm leading-7 text-[#aeb8b1]">
+      <h1 className="text-app-on-brand text-[32px] leading-tight font-semibold tracking-[-0.045em] sm:text-[38px]">{signup ? 'Make yourself at home.' : 'Welcome back.'}</h1>
+      <p className="text-app-on-brand-muted mt-4 text-sm leading-7">
         {signup ? 'Already have an account? ' : 'New to Southern Home? '}
-        <Link href={signup ? '/login' : '/signup'} className="inline-block font-medium text-[#62dba1] underline-offset-4 hover:underline focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#62dba1]">
+        <Link href={signup ? '/login' : '/signup'} className="text-app-accent focus-visible:outline-app-accent inline-block font-medium underline-offset-4 hover:underline focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4">
           {signup ? 'Sign in' : 'Create an account'}
         </Link>
       </p>
@@ -71,7 +71,7 @@ export function AuthForm({ mode, onSubmit }: AuthFormProps) {
           {signup ? 'Create account' : 'Sign in'}
         </Button>
       </form>
-      <p className="mt-7 text-center text-xs leading-6 text-[#aeb8b1]">
+      <p className="text-app-on-brand-muted mt-7 text-center text-xs leading-6">
         Southern Home Handyman <span aria-hidden="true">·</span> Boxwood
         <br />
         Part of Southern Home Services Group.

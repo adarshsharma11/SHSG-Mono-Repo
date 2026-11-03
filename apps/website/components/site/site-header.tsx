@@ -9,6 +9,7 @@ import { navigation } from './navigation';
 import { NavigationIcon } from './navigation-icon';
 
 export function SiteHeader({ appUrl }: { appUrl: string }) {
+  const signupUrl = new URL('/signup', appUrl).toString();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [activeGroup, setActiveGroup] = useState<string | null>(null);
   const header = useRef<HTMLElement>(null);
@@ -107,9 +108,9 @@ export function SiteHeader({ appUrl }: { appUrl: string }) {
         </nav>
         <div className="site-header-actions">
           <AppLink href={appUrl} className="site-login" />
-          <Link href="/#plan-project" className="site-action site-header-cta" onClick={closeNavigation}>
-            Plan a project
-          </Link>
+          <a href={signupUrl} target="_blank" rel="noopener noreferrer" className="site-action site-header-cta" onClick={closeNavigation}>
+            Sign up<span className="sr-only"> (opens the SHSG app in a new tab)</span>
+          </a>
           <Button
             ref={toggle}
             variant="ghost"
@@ -137,9 +138,9 @@ export function SiteHeader({ appUrl }: { appUrl: string }) {
                 {item.label}
               </Link>
             ))}
-            <Link href="/#plan-project" onClick={closeNavigation} tabIndex={mobileOpen ? undefined : -1}>
-              Plan your project
-            </Link>
+            <a href={signupUrl} target="_blank" rel="noopener noreferrer" onClick={closeNavigation} tabIndex={mobileOpen ? undefined : -1}>
+              Sign up<span className="sr-only"> (opens the SHSG app in a new tab)</span>
+            </a>
           </div>
         </div>
       </nav>

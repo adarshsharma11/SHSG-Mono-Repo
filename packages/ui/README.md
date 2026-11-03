@@ -2,6 +2,30 @@
 
 Shared React components for Southern Home Services Group. The package is consumed from the monorepo as source, so both Next.js apps compile it directly.
 
+## Logo
+
+The shared brand mark and wordmark are available from `@shsg/ui` or `@shsg/ui/logo`.
+
+```tsx
+import Link from 'next/link';
+import { Logo } from '@shsg/ui/logo';
+
+<Logo url="/" />
+<Logo as={Link} url="/dashboard" />
+<Logo as={Link} url="/" variant="light" />
+<Logo as={Link} url="/dashboard" compact aria-label="SHSG dashboard" />
+```
+
+`url` is the destination of the logo link. `as` optionally supplies a router Link component so Next.js navigation stays client-side; the default is a native anchor. `variant="light"` supports dark surfaces. `compact` renders only the mark while keeping the brand's accessible name. Standard anchor props and className are forwarded. Omit src to use the SVG fallback. Supply src, imageWidth, and imageHeight to use a brand image; these dimensions reserve its aspect ratio. imageAs optionally accepts a framework image component, such as Next Image, without adding a Next.js dependency to the shared package. The image is decorative inside the named link, so screen readers announce the brand once.
+
+```tsx
+import Image from 'next/image';
+
+<Logo as={Link} url="/" src="/images/brand/logo.webp" imageAs={Image} imageWidth={486} imageHeight={374} />;
+```
+
+The supplied magnolia image is served from each app's own `public/images/brand/logo.webp`. `url` controls navigation; `src` controls the image. Light variants change the wordmark color, without recoloring the supplied artwork.
+
 ## Dropdown Menu and Tooltip
 
 Website routes: `/dropdown-menu` and `/tooltip`. Import from `@shsg/ui` or the matching `@shsg/ui/dropdown-menu` and `@shsg/ui/tooltip` subpaths. Both components are client components and reuse the existing Button and theme tokens; no dependency was added.

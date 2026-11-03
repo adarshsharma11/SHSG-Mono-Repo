@@ -1,4 +1,4 @@
-import type { SignupRequest } from '@shsg/api-client';
+import type { SignupRequest } from '@/api/resources/Auth';
 import { proxyApi } from '@/lib/api.server';
 
 export async function POST(request: Request) {
