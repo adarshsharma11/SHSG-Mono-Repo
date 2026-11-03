@@ -13,7 +13,9 @@ export function ModalShowcase() {
   const nameRef = useRef<HTMLInputElement>(null);
   const cancelRef = useRef<HTMLButtonElement>(null);
   const close = (open: boolean) => {
-    if (!open) setActive(null);
+    if (!open) {
+      setActive(null);
+    }
   };
   return (
     <>

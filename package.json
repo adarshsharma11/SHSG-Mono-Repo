@@ -14,15 +14,6 @@
     "format:check": "prettier --check .",
     "prepare": "husky"
   },
-  "lint-staged": {
-    "*.{js,jsx,ts,tsx}": [
-      "eslint --fix --max-warnings=0",
-      "prettier --write"
-    ],
-    "*.{json,md,mdx,css,scss,yml,yaml}": [
-      "prettier --write"
-    ]
-  },
   "devDependencies": {
     "eslint": "^10.14.0",
     "husky": "^9.1.7",

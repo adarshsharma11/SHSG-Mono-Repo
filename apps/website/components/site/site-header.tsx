@@ -46,9 +46,14 @@ export function SiteHeader({ appUrl }: { appUrl: string }) {
       ref={header}
       className="site-header"
       onKeyDown={(event) => {
-        if (event.key !== 'Escape') return;
-        if (activeGroup) groupButtons.current.get(activeGroup)?.focus();
-        else if (mobileOpen) toggle.current?.focus();
+        if (event.key !== 'Escape') {
+          return;
+        }
+        if (activeGroup) {
+          groupButtons.current.get(activeGroup)?.focus();
+        } else if (mobileOpen) {
+          toggle.current?.focus();
+        }
         closeNavigation();
       }}
     >
@@ -61,14 +66,19 @@ export function SiteHeader({ appUrl }: { appUrl: string }) {
                 key={item.label}
                 className="site-nav-group"
                 onBlur={(event) => {
-                  if (!event.currentTarget.contains(event.relatedTarget)) setActiveGroup(null);
+                  if (!event.currentTarget.contains(event.relatedTarget)) {
+                    setActiveGroup(null);
+                  }
                 }}
               >
                 <button
                   type="button"
                   ref={(node) => {
-                    if (node) groupButtons.current.set(item.label, node);
-                    else groupButtons.current.delete(item.label);
+                    if (node) {
+                      groupButtons.current.set(item.label, node);
+                    } else {
+                      groupButtons.current.delete(item.label);
+                    }
                   }}
                   aria-expanded={activeGroup === item.label}
                   aria-controls={`${id}-${item.label.replaceAll(' ', '-')}`}

@@ -9,7 +9,9 @@ export function LoadingDemo() {
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(
     () => () => {
-      if (timer.current) clearTimeout(timer.current);
+      if (timer.current) {
+        clearTimeout(timer.current);
+      }
     },
     [],
   );

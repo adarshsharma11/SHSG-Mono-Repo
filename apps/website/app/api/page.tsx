@@ -8,7 +8,9 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 export default function ApiPage() {
-  if (process.env.NODE_ENV !== 'development') notFound();
+  if (process.env.NODE_ENV !== 'development') {
+    notFound();
+  }
   const config = getServerApiConfig();
   return (
     <main className="bg-shsg-field flex-1">

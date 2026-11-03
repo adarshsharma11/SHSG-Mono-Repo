@@ -10,7 +10,9 @@ export function AuthEntry() {
   const { status, isAuthenticated } = useAuth();
   const router = useRouter();
   useEffect(() => {
-    if (status === 'ready') router.replace(isAuthenticated ? '/dashboard' : '/login');
+    if (status === 'ready') {
+      router.replace(isAuthenticated ? '/dashboard' : '/login');
+    }
   }, [status, isAuthenticated, router]);
   return <AuthPending />;
 }

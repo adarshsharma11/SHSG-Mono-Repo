@@ -9,7 +9,9 @@ export function WorkspaceAccess({ children }: { children: React.ReactNode }) {
   const { status, isAuthenticated } = useAuth();
   const router = useRouter();
   useEffect(() => {
-    if (status === 'ready' && !isAuthenticated) router.replace('/login');
+    if (status === 'ready' && !isAuthenticated) {
+      router.replace('/login');
+    }
   }, [status, isAuthenticated, router]);
 
   if (status === 'loading' || !isAuthenticated) {

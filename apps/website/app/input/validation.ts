@@ -29,7 +29,9 @@ export interface DemoValues {
 }
 
 export function validateWebsite(value: string) {
-  if (!value) return true;
+  if (!value) {
+    return true;
+  }
   try {
     return ['http:', 'https:'].includes(new URL(value).protocol) || 'Use an HTTP or HTTPS URL';
   } catch {
@@ -39,8 +41,12 @@ export function validateWebsite(value: string) {
 
 export function validateFiles(files: FileList | undefined, allowed: readonly string[], maximum = 2 * 1024 * 1024) {
   for (const file of Array.from(files ?? [])) {
-    if (!allowed.includes(file.type)) return 'Choose a PDF, PNG, or JPEG of the allowed type';
-    if (file.size > maximum) return 'Each file must be 2 MB or smaller';
+    if (!allowed.includes(file.type)) {
+      return 'Choose a PDF, PNG, or JPEG of the allowed type';
+    }
+    if (file.size > maximum) {
+      return 'Each file must be 2 MB or smaller';
+    }
   }
   return true;
 }

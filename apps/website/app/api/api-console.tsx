@@ -33,13 +33,14 @@ export function ApiConsole({ diagnosticsEnabled }: { diagnosticsEnabled: boolean
       run: (signal) => probeApi(() => client.services.get(serviceId, { signal })),
     },
   ];
-  if (diagnosticsEnabled)
+  if (diagnosticsEnabled) {
     endpoints.push({
       id: 'migrations',
       label: 'Migration status',
       path: '/api/internal/migrations',
       run: (signal) => probeApi(() => client.migrations.status({ signal })),
     });
+  }
   return (
     <ApiExplorer title="API explorer" endpoints={endpoints}>
       <div className="max-w-md space-y-3">

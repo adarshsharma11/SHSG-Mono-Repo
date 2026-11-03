@@ -5,3 +5,11 @@ dist
 build
 coverage
 pnpm-lock.yaml
+.pnpm-store
+apps/public-website
+.venv
+__pycache__
+.pytest_cache
+.mypy_cache
+.ruff_cache
+**/next-env.d.ts

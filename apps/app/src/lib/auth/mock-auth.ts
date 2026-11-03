@@ -40,13 +40,17 @@ function write(key: string, value: unknown) {
   }
 }
 function isUser(value: unknown): value is AuthUser {
-  if (!value || typeof value !== 'object') return false;
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
   const user = value as Partial<AuthUser>;
   return typeof user.id === 'string' && typeof user.email === 'string' && typeof user.name === 'string';
 }
 function accounts(): MockAccount[] {
   const value = read(ACCOUNTS_KEY);
-  if (!Array.isArray(value)) return [];
+  if (!Array.isArray(value)) {
+    return [];
+  }
   return value.filter((item): item is MockAccount => isUser(item) && typeof (item as Partial<MockAccount>).salt === 'string' && typeof (item as Partial<MockAccount>).verifier === 'string');
 }
 async function verifier(password: string, salt: string): Promise<string> {
@@ -75,7 +79,9 @@ function createSession(user: AuthUser): AuthSession {
 }
 export function restoreSession(): AuthSession | null {
   const value = read(SESSION_KEY) as Partial<AuthSession> | null;
-  if (value && isUser(value.user) && typeof value.token === 'string' && value.token.startsWith('demo-') && typeof value.expiresAt === 'number' && Number.isFinite(value.expiresAt) && value.expiresAt > Date.now() && value.expiresAt <= Date.now() + SESSION_DURATION) return value as AuthSession;
+  if (value && isUser(value.user) && typeof value.token === 'string' && value.token.startsWith('demo-') && typeof value.expiresAt === 'number' && Number.isFinite(value.expiresAt) && value.expiresAt > Date.now() && value.expiresAt <= Date.now() + SESSION_DURATION) {
+    return value as AuthSession;
+  }
   clearSession();
   return null;
 }
@@ -88,14 +94,17 @@ export function clearSession() {
 }
 export async function mockSignIn({ email, password }: AuthValues): Promise<AuthSession> {
   const normalized = normalize(email);
-  if (normalized === DEMO_CREDENTIALS.email && password === DEMO_CREDENTIALS.password)
+  if (normalized === DEMO_CREDENTIALS.email && password === DEMO_CREDENTIALS.password) {
     return createSession({
       id: 'demo-owner',
       email: normalized,
       name: 'Demo owner',
     });
+  }
   const account = accounts().find((user) => user.email === normalized);
-  if (!account || (await verifier(password, account.salt)) !== account.verifier) throw new MockAuthError('Email or password is incorrect.');
+  if (!account || (await verifier(password, account.salt)) !== account.verifier) {
+    throw new MockAuthError('Email or password is incorrect.');
+  }
   return createSession({
     id: account.id,
     email: account.email,
@@ -104,8 +113,12 @@ export async function mockSignIn({ email, password }: AuthValues): Promise<AuthS
 }
 export async function mockSignUp({ email, password }: AuthValues): Promise<AuthSession> {
   const normalized = normalize(email);
-  if (normalized === DEMO_CREDENTIALS.email || accounts().some((user) => user.email === normalized)) throw new MockAuthError('An account already exists for this email. Sign in instead.');
-  if (!normalized || password.length < 12 || password.length > 128) throw new MockAuthError('Enter an email and a password with 12–128 characters.');
+  if (normalized === DEMO_CREDENTIALS.email || accounts().some((user) => user.email === normalized)) {
+    throw new MockAuthError('An account already exists for this email. Sign in instead.');
+  }
+  if (!normalized || password.length < 12 || password.length > 128) {
+    throw new MockAuthError('Enter an email and a password with 12–128 characters.');
+  }
   const user = {
     id: crypto.randomUUID(),
     email: normalized,

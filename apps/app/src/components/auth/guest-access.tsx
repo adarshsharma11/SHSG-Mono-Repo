@@ -10,8 +10,12 @@ export function GuestAccess({ children }: { children: React.ReactNode }) {
   const { status, isAuthenticated } = useAuth();
   const router = useRouter();
   useEffect(() => {
-    if (status === 'ready' && isAuthenticated) router.replace('/dashboard');
+    if (status === 'ready' && isAuthenticated) {
+      router.replace('/dashboard');
+    }
   }, [status, isAuthenticated, router]);
-  if (status === 'loading' || isAuthenticated) return <AuthPending />;
+  if (status === 'loading' || isAuthenticated) {
+    return <AuthPending />;
+  }
   return children;
 }

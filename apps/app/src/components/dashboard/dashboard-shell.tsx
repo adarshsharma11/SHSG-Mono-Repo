@@ -24,7 +24,9 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
     router.replace('/login');
   }
   // The page owns its auth guard. Always preserve the route slot for Next validation.
-  if (status === 'loading' || !isAuthenticated) return children;
+  if (status === 'loading' || !isAuthenticated) {
+    return children;
+  }
   return (
     <div data-workspace className={`min-h-svh bg-[#f5f7f6] font-sans text-[#1b2821] [color-scheme:light] [--shsg-field-muted:#f2f6f3] [--shsg-field:#fff] [--shsg-ghost:#1b2821] [--shsg-muted:#627067] [--shsg-outline-border:#dce5df] [--shsg-outline:#325b43] [--shsg-primary-foreground:#fff] [--shsg-primary-hover:#066d44] [--shsg-primary:#087f50] [--shsg-ring:#168053] [--shsg-secondary-border:#dce5df] ${collapsed ? 'lg:pl-[88px]' : 'lg:pl-[244px]'}`}>
       <a href="#dashboard-content" className="sr-only z-50 rounded bg-white p-3 focus:not-sr-only focus:fixed focus:top-4 focus:left-4">

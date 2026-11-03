@@ -324,3 +324,9 @@ Further detail: [API README](apps/api/README.md), [UI README](packages/ui/README
 ## SHSG homepage and delivery plan
 
 The customer website homepage is at http://localhost:9001. It introduces Southern Home Handyman and Boxwood and includes a local project brief planner. See the [website README](apps/website/README.md) for page structure, images, and testing, and the [SHSG implementation plan](docs/SHSG_PLAN.md) for the phased operating-platform roadmap. Shared UI examples are available at `/components`.
+
+## Lint rules and Git hooks
+
+Each frontend uses its own ESLint flat config with Next.js presets and an explicit rules object. Run `pnpm lint` from the root to check all workspace packages. Errors block checks; rules configured as warnings remain advisory. Type-only imports may be separate from runtime imports without triggering duplicate-import errors.
+
+Husky runs the discoverable `lint-staged.config.mjs` on pre-commit. Staged frontend source/config files are checked with the ESLint executable from their own app; staged JSON, documentation, styles, and YAML are checked with Prettier. Pre-push runs workspace lint, type checks, and tests. Warning-only lint findings do not block either hook. Run `pnpm install` after cloning to install dependencies and prepare Husky.
