@@ -130,7 +130,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         open={settingsOpen}
         onOpenChange={setSettingsOpen}
         title="Account settings"
-        description="This is a local demo account, not a production identity."
+        description="Signed in with your SHSG account."
         className="bg-white! text-[#1b2821]!"
         footer={
           <Button variant="danger" onClick={logout}>
@@ -149,7 +149,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           </div>
           <div>
             <dt className="text-shsg-muted">Workspace</dt>
-            <dd className="mt-1">SHSG demo · tab-scoped session</dd>
+            <dd className="mt-1">SHSG operations · tab-scoped session</dd>
           </div>
         </dl>
       </Modal>

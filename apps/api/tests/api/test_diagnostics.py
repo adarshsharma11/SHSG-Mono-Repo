@@ -19,7 +19,11 @@ async def test_diagnostics_are_not_public(
 ) -> None:
     app = create_app()
     settings = Settings.model_validate(
-        {"environment": environment, "enable_dev_diagnostics": enabled}
+        {
+            "environment": environment,
+            "enable_dev_diagnostics": enabled,
+            "auth_jwt_secret": "test-secret-that-is-at-least-32-characters-long",
+        }
     )
     app.dependency_overrides[get_settings] = lambda: settings
     probe = AsyncMock()

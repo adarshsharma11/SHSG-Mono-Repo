@@ -1,11 +1,19 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { clearSession, mockSignIn, mockSignUp, restoreSession, type AuthSession } from '../../lib/auth/mock-auth';
-import type { AuthValues } from './auth-schema';
+import { signIn as apiSignIn, signUp as apiSignUp } from '../../lib/auth/auth-client';
+import { clearSession, restoreSession, saveSession, type AuthSession } from '../../lib/auth/auth-session';
+import type { LoginValues, SignupValues } from './auth-schema';
 import { AuthContext, type AuthContextData } from './auth-context';
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+export interface AuthOperations {
+  signIn(values: LoginValues): Promise<AuthSession>;
+  signUp(values: SignupValues): Promise<AuthSession>;
+}
+
+const defaultOperations: AuthOperations = { signIn: apiSignIn, signUp: apiSignUp };
+
+export function AuthProvider({ children, operations = defaultOperations }: { children: React.ReactNode; operations?: AuthOperations }) {
   const [session, setSession] = useState<AuthSession | null>(null);
   const [status, setStatus] = useState<AuthContextData['status']>('loading');
   const signOut = useCallback(() => {
@@ -38,12 +46,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       document.removeEventListener('visibilitychange', checkExpiry);
     };
   }, [session, signOut]);
-  const signIn = useCallback(async (values: AuthValues) => {
-    setSession(await mockSignIn(values));
-  }, []);
-  const signUp = useCallback(async (values: AuthValues) => {
-    setSession(await mockSignUp(values));
-  }, []);
+  const signIn = useCallback(
+    async (values: LoginValues) => {
+      const nextSession = await operations.signIn(values);
+      saveSession(nextSession);
+      setSession(nextSession);
+    },
+    [operations],
+  );
+  const signUp = useCallback(
+    async (values: SignupValues) => {
+      const nextSession = await operations.signUp(values);
+      saveSession(nextSession);
+      setSession(nextSession);
+    },
+    [operations],
+  );
   const value = useMemo(
     () => ({
       status,

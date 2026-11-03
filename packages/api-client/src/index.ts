@@ -2,7 +2,7 @@ import { ApiError } from './ApiError';
 import type { ApiProbeResult } from './types';
 export { ApiError } from './ApiError';
 export type { ApiErrorCode } from './ApiError';
-export { createHttpClient, getData } from './http';
+export { createHttpClient, getData, postData } from './http';
 export type { HttpClientOptions, AxiosInstance } from './http';
 export type * from './types';
 

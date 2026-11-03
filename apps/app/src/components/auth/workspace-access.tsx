@@ -15,7 +15,7 @@ export function WorkspaceAccess({ children }: { children: React.ReactNode }) {
   if (status === 'loading' || !isAuthenticated) {
     return (
       <div role="status" className="flex min-h-svh items-center justify-center bg-[#f5f7f6] text-sm text-[#526258]">
-        {status === 'loading' ? 'Restoring demo session…' : 'Returning to sign in…'}
+        {status === 'loading' ? 'Restoring session…' : 'Returning to sign in…'}
       </div>
     );
   }

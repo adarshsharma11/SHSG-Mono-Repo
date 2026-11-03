@@ -10,7 +10,7 @@ With Docker and Compose v2 installed and running, execute from the repository ro
 docker compose up --build -d
 ```
 
-PostgreSQL starts first, initializes the local `shsg` database/login, and persists data in `postgres_data`. The `migrate` service then runs `alembic upgrade head`; FastAPI starts after it exits successfully. The baseline creates `alembic_version` and records `0001_baseline`. Local credentials default to `shsg` / `shsg_local_password`; optional overrides are in root `.env.example`. After the first build, `docker compose up -d` uses the built images; rebuild after source or revision changes.
+PostgreSQL starts first, initializes the local `shsg` database/login, and persists data in `postgres_data`. The `migrate` service then runs `alembic upgrade head`; FastAPI starts after it exits successfully. Revision `0002_create_users` creates persistent accounts. Local credentials default to `shsg` / `shsg_local_password`; optional overrides are in root `.env.example`. After the first build, `docker compose up -d` uses the built images; rebuild after source or revision changes.
 
 ```bash
 docker compose ps
@@ -34,7 +34,7 @@ If the API container is already using port 8000, stop it first with `docker comp
 
 Copy `apps/api/.env.example` to `apps/api/.env` for optional overrides. The pnpm API script runs in `apps/api`, where `.env` is loaded. Environment variables use the `SHSG_` prefix and override dotenv values. The container API connects to `postgres:5432`; host API defaults to `127.0.0.1:5432`. Credentials are separate driver parameters, and the password uses Pydantic SecretStr. Restart after changing settings, which are cached per process.
 
-CORS accepts comma-separated origins, defaulting to `http://localhost:9001,http://localhost:9002`. The middleware currently allows GET because all existing endpoints are read-only.
+CORS accepts comma-separated origins, defaulting to `http://localhost:9001,http://localhost:9002`. The middleware allows GET and POST.
 
 ## Endpoints
 
@@ -44,8 +44,10 @@ CORS accepts comma-separated origins, defaulting to `http://localhost:9001,http:
 | `GET /ready`                 | Runs `SELECT 1`; HTTP 200 `{"status":"ready","database":"ok"}` or HTTP 503 `{"status":"not_ready","database":"unavailable"}` |
 | `GET /services`              | Existing static service catalog                                                                                              |
 | `GET /services/{service_id}` | Existing static service details, or 404                                                                                      |
+| `POST /auth/signup`          | Creates a user from `full_name`, `email`, `phone`, and an 8–128 character password                                           |
+| `POST /auth/login`           | Returns an HS256 bearer token after email/password verification                                                              |
 
-Readiness opens a short-lived asynchronous Psycopg connection with an overall deadline (`SHSG_DATABASE_TIMEOUT_SECONDS`, default 3 seconds). Private driver errors are not exposed. SQLAlchemy supplies the base metadata and Alembic manages schema revisions. No business tables or application connection pool have been added; the service catalog remains static.
+Readiness opens a short-lived asynchronous Psycopg connection with an overall deadline (`SHSG_DATABASE_TIMEOUT_SECONDS`, default 3 seconds). Private driver errors are not exposed. SQLAlchemy supplies the async session pool and metadata; Alembic manages schema revisions. Passwords use Argon2 and are never returned. The frontend mock-auth flow has not yet been connected to these endpoints.
 
 ## Structure
 
@@ -75,7 +77,7 @@ pnpm --filter @shsg/api lint
 pnpm --filter @shsg/api typecheck
 ```
 
-The default suite stays in-process, excludes integration tests, and does not start Uvicorn or Docker. It covers services, CORS, liveness/readiness, deadlines, connection cleanup, dotenv, and credential masking.
+The default suite stays in-process, excludes integration tests, and does not start Uvicorn or Docker. It covers authentication, response envelopes, services, CORS, liveness/readiness, deadlines, connection cleanup, dotenv, and credential masking.
 
 With the configured PostgreSQL database already running:
 

@@ -35,7 +35,34 @@ def test_postgres_offline_sql_creates_and_records_migration_tracking() -> None:
     assert "CREATE TABLE alembic_version" in sql
     assert "INSERT INTO alembic_version" in sql
     assert "0001_baseline" in sql
+    assert "CREATE TABLE users" in sql
+    assert "0002_create_users" in sql
     assert "shsg_local_password" not in sql
+
+
+def test_user_migration_upgrades_and_downgrades_on_sqlite() -> None:
+    engine = create_engine("sqlite://")
+    try:
+        with engine.begin() as connection:
+            config = migration_config()
+            config.attributes["connection"] = connection
+            command.upgrade(config, "head")
+            inspector = inspect(connection)
+            assert set(inspector.get_table_names()) == {"alembic_version", "users"}
+            assert {column["name"] for column in inspector.get_columns("users")} == {
+                "id",
+                "full_name",
+                "email",
+                "phone",
+                "password_hash",
+                "is_active",
+                "created_at",
+                "updated_at",
+            }
+            command.downgrade(config, "0001_baseline")
+            assert inspect(connection).get_table_names() == ["alembic_version"]
+    finally:
+        engine.dispose()
 
 
 def test_baseline_upgrade_is_repeatable_and_can_be_downgraded() -> None:

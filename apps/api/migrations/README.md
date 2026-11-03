@@ -12,7 +12,7 @@ docker compose up --build -d
 
 Once images are built, `docker compose up -d` uses those images. Startup order is PostgreSQL healthy → `migrate` runs `alembic upgrade head` → migration service exits successfully → API starts. A failed migration blocks a new API container from starting. An existing running API is not paused by a separate migration run; this is a local startup workflow, not a coordinated production rollout.
 
-The committed `0001_baseline` revision is intentionally empty of business DDL. Alembic itself creates `alembic_version` and records `0001_baseline`. Repeating `upgrade head` at the latest revision performs no additional schema changes. The one-shot `migrate` container exiting with code 0 is expected.
+The committed `0001_baseline` revision establishes tracking, and `0002_create_users` creates the authentication table and uniqueness constraints. Alembic records the latest applied revision in `alembic_version`. Repeating `upgrade head` at the latest revision performs no additional schema changes. The one-shot `migrate` container exiting with code 0 is expected.
 
 Startup applies migrations; it does not autogenerate new revision files. After adding or editing migration files, rebuild images so the migration service receives the updated files. `docker compose restart api` does not run dependency migrations.
 
@@ -80,4 +80,4 @@ uv run pytest -m integration
 
 Default tests verify revision discovery, PostgreSQL offline SQL, template generation, password handling, and the portable baseline lifecycle using SQLite. They do not prove PostgreSQL-specific DDL compatibility. Integration tests require the configured PostgreSQL database; the migration lifecycle test creates a uniquely named schema inside a transaction and rolls it back afterward. Existing public/application tables are not downgraded by that test.
 
-No business tables have been added yet. `alembic_version` is the only table introduced by the baseline.
+The current head is `0002_create_users`. Downgrading it drops the `users` table and permanently deletes account records, so only do that intentionally.
