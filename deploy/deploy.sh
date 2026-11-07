@@ -3,13 +3,10 @@
 set -Eeuo pipefail
 umask 077
 
-region=${1:?AWS region is required}
-registry=${2:?ECR registry is required}
-revision=${3:?Commit SHA is required}
-backup_s3_uri=${4:-}
+registry=${1:?GHCR registry namespace is required}
+revision=${2:?Commit SHA is required}
 [[ "$revision" =~ ^[0-9a-f]{40}$ ]] || { echo 'Expected a full commit SHA'; exit 1; }
-[[ "$registry" =~ ^[0-9]{12}\.dkr\.ecr\.[a-z0-9-]+\.amazonaws\.com$ ]] || { echo 'Invalid ECR registry'; exit 1; }
-[[ "$region" =~ ^[a-z0-9-]+$ ]] || exit 1
+[[ "$registry" =~ ^ghcr\.io/[a-z0-9][a-z0-9-]*$ ]] || { echo 'Expected ghcr.io followed by a lowercase GitHub owner'; exit 1; }
 
 cd -- "$(dirname -- "${BASH_SOURCE[0]}")"
 test -f /opt/shsg/.env.production || { echo 'Create /opt/shsg/.env.production before deploying'; exit 1; }
@@ -19,7 +16,7 @@ export IMAGE_REGISTRY="$registry" IMAGE_TAG="$revision"
 compose=(docker compose --env-file /opt/shsg/.env.production -f compose.production.yml)
 "${compose[@]}" config --quiet
 
-aws ecr get-login-password --region "$region" | docker login --username AWS --password-stdin "$registry"
+# Private package access is configured once with sudo docker login ghcr.io.
 "${compose[@]}" pull
 "${compose[@]}" up --detach --wait --wait-timeout 180 postgres
 
@@ -28,10 +25,6 @@ backup="/opt/shsg/backups/$(date -u +%Y%m%dT%H%M%SZ)-${revision}.dump"
 # Back up before changing the schema, including on the first deployment.
 "${compose[@]}" exec -T postgres sh -c 'pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Fc' > "$backup"
 test -s "$backup"
-if [[ -n "$backup_s3_uri" ]]; then
-  [[ "$backup_s3_uri" == s3://* ]] || { echo 'Backup destination must start with s3://'; exit 1; }
-  aws s3 cp "$backup" "${backup_s3_uri%/}/$(basename "$backup")" --region "$region" --only-show-errors
-fi
 
 # Always run a fresh migration task; a previously completed container is not sufficient.
 # Existing app containers remain running until this task succeeds.

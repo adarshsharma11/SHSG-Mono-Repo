@@ -185,10 +185,10 @@ jobs:
       - name: Check deployment tooling
         run: |
           bash -n deploy/deploy.sh
-          python3 -m unittest discover -s deploy -p 'test_*.py'
+          node --check deploy/smoke-test.mjs
           docker compose -f deploy/compose.production.yml config --quiet
       - name: Require explicit URLs when building a release
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.DEPLOY_ENABLED == 'true'
+        if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main' && vars.DEPLOY_ENABLED == 'true'
         env:
           CONFIGURED_APP_URL: ${{ vars.SHSG_APP_URL }}
           CONFIGURED_CORS_ORIGINS: ${{ vars.SHSG_CORS_ORIGINS }}
@@ -205,15 +205,15 @@ jobs:
       - name: Start production stack and apply migrations
         run: docker compose -f deploy/compose.production.yml up --detach --wait --wait-timeout 240
       - name: Verify rendered pages, API proxy, signup and login
-        run: python3 deploy/smoke-test.py
+        run: node deploy/smoke-test.mjs
       - name: Package the tested images for deployment
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.DEPLOY_ENABLED == 'true'
+        if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main' && vars.DEPLOY_ENABLED == 'true'
         run: |
           docker image save "$IMAGE_REGISTRY/shsg-website:$IMAGE_TAG" \
             "$IMAGE_REGISTRY/shsg-app:$IMAGE_TAG" "$IMAGE_REGISTRY/shsg-api:$IMAGE_TAG" \
             | gzip > "$RUNNER_TEMP/shsg-images.tar.gz"
       - name: Preserve the exact images that passed the smoke test
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.DEPLOY_ENABLED == 'true'
+        if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main' && vars.DEPLOY_ENABLED == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: production-images
@@ -249,36 +249,45 @@ jobs:
   deploy:
     name: Deploy EC2
     needs: [required]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.required.result == 'success' && vars.DEPLOY_ENABLED == 'true'
+    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main' && needs.required.result == 'success' && vars.DEPLOY_ENABLED == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     environment: production
     permissions:
       contents: read
-      id-token: write
+      packages: write
     concurrency:
       group: shsg-production
       cancel-in-progress: false
     env:
-      AWS_REGION: ap-southeast-2
-      EC2_INSTANCE_ID: ${{ vars.EC2_INSTANCE_ID }}
-      IMAGE_REGISTRY: ${{ vars.ECR_REGISTRY }}
-      BACKUP_S3_URI: ${{ vars.BACKUP_S3_URI }}
+      SSH_HOST: ${{ secrets.SSH_HOST }}
+      SSH_USER: ${{ secrets.SSH_USER }}
+      UPLOAD_DIRECTORY: /tmp/shsg-release-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
     steps:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
-      - name: Obtain temporary AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
-          aws-region: ${{ env.AWS_REGION }}
       - name: Validate deployment settings
+        id: ssh_identity
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
         run: |
-          test -n "$EC2_INSTANCE_ID"
-          test -n "$IMAGE_REGISTRY"
-      - name: Log in to ECR
-        run: aws ecr get-login-password | docker login --username AWS --password-stdin "$IMAGE_REGISTRY"
+          test -n "$SSH_HOST" || { echo 'Set SSH_HOST in the production environment'; exit 1; }
+          test -n "$SSH_USER" || { echo 'Set SSH_USER in the production environment'; exit 1; }
+          test -n "$SSH_PRIVATE_KEY" || { echo 'Set SSH_PRIVATE_KEY in the production environment'; exit 1; }
+          test -n "$SSH_KNOWN_HOSTS" || { echo 'Set SSH_KNOWN_HOSTS in the production environment'; exit 1; }
+          known_hosts="$(mktemp)"
+          trap 'rm -f "$known_hosts"' EXIT
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > "$known_hosts"
+          fingerprint="$(ssh-keygen -lf "$known_hosts" -E sha256 | awk 'NR == 1 {print $2}')"
+          test -n "$fingerprint" || { echo 'SSH_KNOWN_HOSTS must contain a verified SSH host key'; exit 1; }
+          printf 'fingerprint=%s\n' "$fingerprint" >> "$GITHUB_OUTPUT"
+          printf 'IMAGE_REGISTRY=ghcr.io/%s\n' "${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_ENV"
+      - name: Log in to GitHub Container Registry
+        env:
+          REGISTRY_TOKEN: ${{ github.token }}
+        run: printf '%s' "$REGISTRY_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
       - uses: actions/download-artifact@v4
         with:
           name: production-images
@@ -287,11 +296,36 @@ jobs:
         run: |
           docker image load --input "$RUNNER_TEMP/shsg-images.tar.gz"
           for service in website app api; do
-            if aws ecr describe-images --repository-name "shsg-$service" --image-ids "imageTag=$GITHUB_SHA" >/dev/null 2>&1; then
-              continue
-            fi
             docker image tag "shsg-ci/shsg-$service:smoke" "$IMAGE_REGISTRY/shsg-$service:$GITHUB_SHA"
             docker image push "$IMAGE_REGISTRY/shsg-$service:$GITHUB_SHA"
           done
-      - name: Deploy through Systems Manager and wait for healthy services
-        run: python3 deploy/send-command.py
+      - name: Upload deployment files
+        uses: appleboy/scp-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          passphrase: ${{ secrets.DEPLOY_KEY_PASSPHRASE }}
+          fingerprint: ${{ steps.ssh_identity.outputs.fingerprint }}
+          source: deploy/compose.production.yml,deploy/deploy.sh
+          target: ${{ env.UPLOAD_DIRECTORY }}
+          strip_components: 1
+      - name: Deploy through verified SSH and wait for healthy services
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          passphrase: ${{ secrets.DEPLOY_KEY_PASSPHRASE }}
+          fingerprint: ${{ steps.ssh_identity.outputs.fingerprint }}
+          command_timeout: 20m
+          envs: IMAGE_REGISTRY,GITHUB_SHA,UPLOAD_DIRECTORY
+          script: |
+            set -eu
+            release="/opt/shsg/releases/$GITHUB_SHA"
+            sudo -n install -d -m 700 "$release"
+            sudo -n install -m 600 "$UPLOAD_DIRECTORY/compose.production.yml" "$release/compose.production.yml"
+            sudo -n install -m 600 "$UPLOAD_DIRECTORY/deploy.sh" "$release/deploy.sh"
+            rm -f "$UPLOAD_DIRECTORY/compose.production.yml" "$UPLOAD_DIRECTORY/deploy.sh"
+            rmdir "$UPLOAD_DIRECTORY"
+            sudo -n bash "$release/deploy.sh" "$IMAGE_REGISTRY" "$GITHUB_SHA"
