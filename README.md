@@ -4,6 +4,8 @@ SHSG is a pnpm/Turbo monorepo with a public website, an operations app, a FastAP
 
 The copied `apps/public-website` project is reference material. It is excluded from the pnpm workspace, repository formatting, and SHSG CI; its original source and dependencies are left intact.
 
+For the EC2 public-IP setup, production Docker images, CI-gated deployment, and automatic application of committed migrations, see [EC2 deployment](docs/DEPLOYMENT.md). The planned endpoints are `http://15.134.206.246:9001` (website) and `http://15.134.206.246:9002` (app); the API and database stay private. Deployment remains disabled until AWS and GitHub are configured.
+
 ## Repository and local URLs
 
 | Path                  | Purpose                                                   | Local URL                    |
@@ -292,14 +294,16 @@ Startup applies committed migration files; it does not generate new ones. Full i
 
 ## Continuous integration
 
-[`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs on pushes, pull requests, and manual dispatch from GitHub Actions. Jobs run on Ubuntu 24.04 with read-only repository permissions. Newer runs on the same ref cancel older runs. No deployment or repository write is performed, and no repository secrets are required; database credentials are disposable CI-only values.
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs on pushes, pull requests, and manual dispatch from GitHub Actions. Checks run on Ubuntu 24.04 with read-only repository permissions and disposable CI database credentials. Newer non-main runs cancel older runs; main-branch runs are not interrupted during deployment. The optional deployment job uses temporary AWS credentials through OIDC, runs only after every required check succeeds on a push to `main`, and stays disabled unless the repository variable `DEPLOY_ENABLED` is `true`. See [EC2 deployment setup](docs/DEPLOYMENT.md).
 
-| Check              | Coverage                                                                                                                                                                                                       |
-| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Frontend           | Frozen pnpm install; repository Prettier check; API-client/UI/website/app ESLint and TypeScript checks; client and UI/website interaction tests; production builds of both Next apps                           |
-| API and PostgreSQL | Python lint/format/type checks; unit/API tests; fresh PostgreSQL 17 migration upgrade; repeat upgrade; current-head verification; `alembic check` for missing migrations; PostgreSQL integration tests         |
-| Docker Compose     | Configuration validation; actual API/migration image build; database → migration → API startup; HTTP liveness/readiness; migrations checked inside the image; database persistence across container recreation |
-| Required checks    | Passes only when all three jobs succeed; failed, skipped, or cancelled dependencies do not count as success                                                                                                    |
+| Check                 | Coverage                                                                                                                                                                                                       |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Frontend              | Frozen pnpm install; repository Prettier check; API-client/UI/website/app ESLint and TypeScript checks; client and UI/website interaction tests; production builds of both Next apps                           |
+| API and PostgreSQL    | Python lint/format/type checks; unit/API tests; fresh PostgreSQL 17 migration upgrade; repeat upgrade; current-head verification; `alembic check` for missing migrations; PostgreSQL integration tests         |
+| Docker Compose        | Configuration validation; actual API/migration image build; database → migration → API startup; HTTP liveness/readiness; migrations checked inside the image; database persistence across container recreation |
+| Production containers | Standalone images for both frontends and API; complete Compose startup; rendered pages; API proxies; real signup/login; deployment tooling tests                                                               |
+| Required checks       | Passes only when all four check jobs succeed; failed, skipped, or cancelled dependencies do not count as success                                                                                               |
+| Deploy EC2            | Optional main-only release of the exact tested images through ECR and Systems Manager; backup, migrations, and service health checks                                                                           |
 
 Frontend CI uses Node 22 and the pnpm version in root `package.json`. It runs `next typegen` for each Next app before standalone TypeScript checks so clean checkouts have their generated route types. Both production builds remain blocking checks; they are not skipped when a local sandbox prevents an internal Turbopack socket.
 

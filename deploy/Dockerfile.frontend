@@ -1,0 +1,27 @@
+# Build with the repository root as the Docker context.
+FROM node:22-bookworm-slim AS build
+WORKDIR /workspace
+ENV NEXT_TELEMETRY_DISABLED=1 HUSKY=0
+RUN npm install --global pnpm@12.15.0
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY packages ./packages
+COPY apps/app ./apps/app
+COPY apps/website ./apps/website
+RUN pnpm install --frozen-lockfile
+ARG APP
+# Website navigation is rendered during the build; this is a public URL.
+ARG SHSG_APP_URL=http://15.134.206.246:9002
+ENV SHSG_APP_URL=$SHSG_APP_URL
+RUN test "$APP" = app || test "$APP" = website
+RUN pnpm --filter "@shsg/$APP" build
+
+FROM node:22-bookworm-slim AS runtime
+WORKDIR /app
+ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 HOSTNAME=0.0.0.0
+ARG APP
+COPY --from=build --chown=node:node /workspace/apps/${APP}/.next/standalone ./
+COPY --from=build --chown=node:node /workspace/apps/${APP}/.next/static ./apps/${APP}/.next/static
+COPY --from=build --chown=node:node /workspace/apps/${APP}/public ./apps/${APP}/public
+WORKDIR /app/apps/${APP}
+USER node
+CMD ["node", "server.js"]

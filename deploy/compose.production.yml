@@ -1,0 +1,108 @@
+name: shsg-production
+
+x-runtime: &runtime
+  restart: unless-stopped
+  logging:
+    driver: json-file
+    options:
+      max-size: '10m'
+      max-file: '3'
+
+x-api-environment: &api-environment
+  SHSG_ENVIRONMENT: production
+  SHSG_ENABLE_DEV_DIAGNOSTICS: 'false'
+  SHSG_DATABASE_HOST: postgres
+  SHSG_DATABASE_PORT: '5432'
+  SHSG_DATABASE_NAME: ${POSTGRES_DB:-shsg}
+  SHSG_DATABASE_USER: ${POSTGRES_USER:-shsg}
+  SHSG_DATABASE_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+  SHSG_AUTH_JWT_SECRET: ${SHSG_AUTH_JWT_SECRET:?Set SHSG_AUTH_JWT_SECRET}
+  SHSG_CORS_ORIGINS: ${SHSG_CORS_ORIGINS:?Set SHSG_CORS_ORIGINS}
+
+x-frontend-environment: &frontend-environment
+  SHSG_API_BASE_URL: http://api:8000
+  SHSG_API_TIMEOUT_MS: '5000'
+  SHSG_ENABLE_DEV_DIAGNOSTICS: 'false'
+
+services:
+  postgres:
+    <<: *runtime
+    image: postgres:17-bookworm
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-shsg}
+      POSTGRES_USER: ${POSTGRES_USER:-shsg}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  migrate:
+    image: ${IMAGE_REGISTRY:?Set IMAGE_REGISTRY}/shsg-api:${IMAGE_TAG:?Set IMAGE_TAG}
+    environment: *api-environment
+    command: ['alembic', 'upgrade', 'head']
+    restart: 'no'
+    healthcheck:
+      disable: true
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  api:
+    <<: *runtime
+    image: ${IMAGE_REGISTRY:?Set IMAGE_REGISTRY}/shsg-api:${IMAGE_TAG:?Set IMAGE_TAG}
+    environment: *api-environment
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ['CMD', 'python', '-c', "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/ready', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 15s
+
+  website:
+    <<: *runtime
+    image: ${IMAGE_REGISTRY:?Set IMAGE_REGISTRY}/shsg-website:${IMAGE_TAG:?Set IMAGE_TAG}
+    environment:
+      <<: *frontend-environment
+      PORT: '9001'
+      SHSG_APP_URL: ${SHSG_APP_URL:?Set SHSG_APP_URL}
+    ports:
+      - '${WEBSITE_PORT:-9001}:9001'
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'node', '-e', "fetch('http://127.0.0.1:9001/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+  app:
+    <<: *runtime
+    image: ${IMAGE_REGISTRY:?Set IMAGE_REGISTRY}/shsg-app:${IMAGE_TAG:?Set IMAGE_TAG}
+    environment:
+      <<: *frontend-environment
+      PORT: '9002'
+    ports:
+      - '${APP_PORT:-9002}:9002'
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'node', '-e', "fetch('http://127.0.0.1:9002/login').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+volumes:
+  postgres_data:

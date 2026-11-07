@@ -5,6 +5,8 @@ import type { NextConfig } from 'next';
 const appDir = path.dirname(fileURLToPath(import.meta.url));
 
 const nextConfig: NextConfig = {
+  output: 'standalone',
+  outputFileTracingRoot: path.resolve(appDir, '../..'),
   cacheComponents: true,
   partialPrefetching: true,
 
