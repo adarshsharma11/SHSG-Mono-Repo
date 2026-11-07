@@ -10,7 +10,7 @@ COPY apps/website ./apps/website
 RUN pnpm install --frozen-lockfile
 ARG APP
 # Website navigation is rendered during the build; this is a public URL.
-ARG SHSG_APP_URL=http://15.134.206.246:9002
+ARG SHSG_APP_URL=http://localhost:9002
 ENV SHSG_APP_URL=$SHSG_APP_URL
 RUN test "$APP" = app || test "$APP" = website
 RUN pnpm --filter "@shsg/$APP" build

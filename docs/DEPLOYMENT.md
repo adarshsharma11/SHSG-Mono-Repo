@@ -57,7 +57,7 @@ sudoedit /opt/shsg/.env.production
 
 A checkout is optional: create that same file using your EC2 terminal if CI will deliver the deployment files. Replace `ACCOUNT_ID` and both secret placeholders. Generate each secret independently using `openssl rand -hex 32`. Keep the file owned by root with mode `600`. The deployment script supplies the actual registry and commit tag, overriding the example values.
 
-The frontends call the API through Docker DNS (`http://api:8000`); their browser requests use same-origin `/api` routes. No public API port is necessary. The website's Login/Sign up destination is also built into rendered HTML, so changing `SHSG_APP_URL` requires a new image. Update its value in the workflow and EC2 configuration together.
+The frontends call the API through Docker DNS (`http://api:8000`); their browser requests use same-origin `/api` routes. No public API port is necessary. The website's Login/Sign up destination is also built into rendered HTML, so changing `SHSG_APP_URL` requires a new image. Update the GitHub repository variables and EC2 configuration together. GitHub Actions cannot read `/opt/shsg/.env.production` on EC2 during an image build; the workflow takes public URLs from Actions variables, while Compose reads runtime settings from the EC2 environment file. CI uses localhost defaults when the variables are unset, but release builds require both variables explicitly.
 
 ## 3. Configure ECR and GitHub access
 
@@ -76,13 +76,15 @@ The EC2 role needs ECR pull permissions (`ecr:GetAuthorizationToken`, `ecr:Batch
 
 Create a GitHub environment named **production**, restrict its deployment branches to `main`, and add these Actions variables:
 
-| Variable              | Scope                            | Value                                             |
-| --------------------- | -------------------------------- | ------------------------------------------------- |
-| `DEPLOY_ENABLED`      | Repository                       | `true` only after completing setup                |
-| `AWS_DEPLOY_ROLE_ARN` | production environment           | ARN of the GitHub OIDC deployment role            |
-| `EC2_INSTANCE_ID`     | production environment           | The `i-...` instance ID, not its IP/DNS name      |
-| `ECR_REGISTRY`        | production environment           | `ACCOUNT_ID.dkr.ecr.ap-southeast-2.amazonaws.com` |
-| `BACKUP_S3_URI`       | production environment, optional | `s3://YOUR-BUCKET/shsg/backups`                   |
+| Variable              | Scope                            | Value                                                   |
+| --------------------- | -------------------------------- | ------------------------------------------------------- |
+| `DEPLOY_ENABLED`      | Repository                       | `true` only after completing setup                      |
+| `SHSG_APP_URL`        | Repository                       | `http://15.134.206.246:9002`                            |
+| `SHSG_CORS_ORIGINS`   | Repository                       | `http://15.134.206.246:9001,http://15.134.206.246:9002` |
+| `AWS_DEPLOY_ROLE_ARN` | production environment           | ARN of the GitHub OIDC deployment role                  |
+| `EC2_INSTANCE_ID`     | production environment           | The `i-...` instance ID, not its IP/DNS name            |
+| `ECR_REGISTRY`        | production environment           | `ACCOUNT_ID.dkr.ecr.ap-southeast-2.amazonaws.com`       |
+| `BACKUP_S3_URI`       | production environment, optional | `s3://YOUR-BUCKET/shsg/backups`                         |
 
 For automatic deployment, do not require a manual reviewer on this environment. Protect `main` with a rule requiring **Required checks** before merge, including administrators if desired. Enabling repository rules and IAM is a one-time external setup; adding a workflow alone does not configure those services.
 

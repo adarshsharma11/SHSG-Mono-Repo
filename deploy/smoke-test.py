@@ -32,9 +32,10 @@ def post(path, payload):
 
 def main():
     home = get(f"{WEBSITE_URL}/")
-    assert "http://15.134.206.246:9002" in home, (
-        "Website links must target the deployed app"
+    expected_app_url = os.environ.get("SHSG_APP_URL", "http://localhost:9002").rstrip(
+        "/"
     )
+    assert expected_app_url in home, "Website links must target the deployed app"
     get(f"{APP_URL}/login")
     get(f"{APP_URL}/signup")
     get(f"{WEBSITE_URL}/api/health")
