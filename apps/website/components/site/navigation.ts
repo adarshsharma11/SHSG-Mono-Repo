@@ -46,6 +46,7 @@ export const footerGroups = [
     links: [
       { label: 'Common questions', href: '/#questions' },
       { label: 'Service-area guidance', href: '/#questions' },
+      { label: 'Terms of use', href: '/terms-of-use' },
     ],
   },
 ] as const;

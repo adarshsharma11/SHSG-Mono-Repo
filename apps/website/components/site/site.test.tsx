@@ -27,6 +27,7 @@ describe('common website shell', () => {
     }
     const footer = screen.getByRole('contentinfo');
     expect(within(footer).getByRole('link', { name: 'Our services' })).toHaveAttribute('href', '/#services');
+    expect(within(footer).getByRole('link', { name: 'Terms of use' })).toHaveAttribute('href', '/terms-of-use');
     expect(screen.queryByRole('link', { name: /component library/i })).not.toBeInTheDocument();
   });
 

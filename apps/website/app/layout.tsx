@@ -24,7 +24,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<'/'>) {
   const { appUrl } = getWebsiteConfig();
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
+    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased motion-safe:has-[[data-terms-page]]:scroll-smooth print:has-[[data-terms-page]]:[&_.site-footer]:hidden print:has-[[data-terms-page]]:[&_.site-header]:hidden print:has-[[data-terms-page]]:[&_.site-skip-link]:hidden`}>
       <body className="flex min-h-full flex-col">
         <SiteShell appUrl={appUrl} showDeveloperLinks={process.env.NODE_ENV === 'development'}>
           {children}
