@@ -104,3 +104,13 @@ The brand color is **#1B2951**. `components/site/theme.css` owns the website pal
 The website Brand wrapper uses `Logo` from `@shsg/ui/logo`. Its url prop controls the destination; dark headers use the light variant. The same shared logo is used by the app's auth pages and dashboard sidebar. See the [shared logo API](../../packages/ui/README.md#logo).
 
 The supplied magnolia artwork lives at `public/images/brand/logo.webp` in each frontend. Logo uses the framework image component, preserves its 486×374 aspect ratio, and requests a small responsive image size suitable for the header/sidebar.
+
+## Home journal
+
+`/blog` is a Tailwind-only editorial index with a featured guide, shared animated underline tabs, search, and progressive article loading. `/blog/[slug]` statically generates all six guides. Unknown slugs render the article-not-found view with Next.js noindex metadata (streamed responses can retain HTTP 200). Header and footer both link to the journal.
+
+Edit `components/blog/articles.ts` to add or revise an article. Keep slugs stable, use actual publication dates, and update copy before publishing business-specific claims. Reading time is calculated from the content. Pages include individual titles/descriptions, Open Graph article metadata, semantic dates/headings, related links, and escaped BlogPosting JSON-LD. Set canonical URLs and a sitemap when the production website domain is finalized; no guessed domain is embedded here.
+
+`BlogCard` supplies Next Link and responsive Next Image to the reusable `ArticleCard` exported by `@shsg/ui`. The server passes rendered cards and searchable summaries into the catalog, keeping full article bodies out of its client data. Covers are lazy-loaded WebP illustrations; dimensions are reserved to avoid layout shifts. Original artwork provenance and generation prompts are in [blog images](public/images/blog/README.md).
+
+Run `pnpm --filter @shsg/website test`, `pnpm --filter @shsg/website typecheck`, and `pnpm --filter @shsg/website lint`. Check `/blog` at mobile and desktop widths, tab keyboard navigation, search plus categories, the empty-state reset, load more, article links, and reduced motion.

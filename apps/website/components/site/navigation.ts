@@ -26,6 +26,7 @@ export const navigation = [
   },
   { label: 'How it works', href: '/#how-it-works' },
   { label: 'FAQs', href: '/#questions' },
+  { label: 'Journal', href: '/blog' },
 ] as const;
 
 export const footerGroups = [
@@ -47,6 +48,7 @@ export const footerGroups = [
       { label: 'Common questions', href: '/#questions' },
       { label: 'Service-area guidance', href: '/#questions' },
       { label: 'Terms of use', href: '/terms-of-use' },
+      { label: 'Home journal', href: '/blog' },
     ],
   },
 ] as const;

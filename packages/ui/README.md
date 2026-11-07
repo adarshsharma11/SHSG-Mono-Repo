@@ -533,3 +533,7 @@ const ref = useRef<HTMLButtonElement>(null);
 
 <Button ref={ref}>Save</Button>;
 ```
+
+## Article card
+
+`ArticleCard` from `@shsg/ui` provides a dark editorial article container with optional featured layout. Supply `media` (for example Next Image), a linked `title` (for example Next Link), `category`, `excerpt`, ISO `date`, `dateLabel`, and `readingTime`. `headingLevel` defaults to `h2`; use `h3` when nested below another heading. The title link extends across the card, so keep media and other content non-interactive. The shared package has no Next.js dependency.

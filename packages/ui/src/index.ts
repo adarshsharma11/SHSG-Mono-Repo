@@ -19,3 +19,4 @@ export * from './components/pagination';
 export * from './components/empty-state';
 export * from './components/api-explorer';
 export * from './components/logo';
+export * from './components/article-card';

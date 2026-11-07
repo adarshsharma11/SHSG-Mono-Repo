@@ -7,7 +7,7 @@ import { ServiceResults } from './service-results';
 
 export function ServiceExplorer({ onSelect }: { onSelect: (service: string) => void }) {
   const [group, setGroup] = useState<ServiceGroup>('all');
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState<string>('');
   const query = search.trim().toLowerCase();
 
   return (
