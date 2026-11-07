@@ -1,39 +1,35 @@
-# EC2 deployment
+# EC2 deployment through GHCR and SSH
 
-This deployment targets `15.134.206.246` (`ec2-15-134-206-246.ap-southeast-2.compute.amazonaws.com`) in `ap-southeast-2`, using Linux x86-64 images for the `t3.micro` instance.
+GitHub Actions tests the Docker images, publishes the exact tested images to GitHub Container Registry (GHCR), and uploads the Compose file and deployment script with `appleboy/scp-action@v1`, then runs them with `appleboy/ssh-action@v1`. EC2 pulls and runs those images. AWS CLI, ECR, Systems Manager, and a Git checkout on EC2 are not required.
 
-| Service        | Public URL                 | Docker access   |
-| -------------- | -------------------------- | --------------- |
-| Website        | http://15.134.206.246:9001 | `website:9001`  |
-| Operations app | http://15.134.206.246:9002 | `app:9002`      |
-| FastAPI        | None                       | `api:8000`      |
-| PostgreSQL     | None                       | `postgres:5432` |
+The initial target is Ubuntu on the x86-64 instance `15.134.206.246` in `ap-southeast-2`.
 
-This public-IP setup uses HTTP. Use test accounts until HTTPS is configured; passwords and bearer tokens otherwise travel without transport encryption. Reserve an Elastic IP if this address must survive an EC2 stop/start. When domains are ready, add a reverse proxy with HTTPS, remove direct public access to 9001/9002, and update the app URL and allowed origins.
+| Service    | Public URL                 | Internal address |
+| ---------- | -------------------------- | ---------------- |
+| Website    | http://15.134.206.246:9001 | `website:9001`   |
+| App        | http://15.134.206.246:9002 | `app:9002`       |
+| API        | None                       | `api:8000`       |
+| PostgreSQL | None                       | `postgres:5432`  |
 
-## 1. Prepare the instance once
+Use test accounts until HTTPS is configured. Reserve an Elastic IP if this address must survive instance stop/start. The `t3.micro` has limited memory: builds stay in CI, but monitor runtime memory and disk and consider more capacity before production traffic.
 
-Confirm the operating system in EC2 before installing software. Install Docker Engine with its Compose plugin, AWS CLI v2, and ensure the SSM Agent is running:
+## 1. Prepare EC2
 
-- [Docker on Ubuntu](https://docs.docker.com/engine/install/ubuntu/)
-- [Docker on Amazon Linux](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-docker.html)
-- [AWS CLI v2 installation](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
-- [SSM Agent setup](https://docs.aws.amazon.com/systems-manager/latest/userguide/ssm-agent.html)
-
-The instance needs outbound access to Systems Manager, ECR, S3 (for ECR layers), and image registries. Attach an instance role with `AmazonSSMManagedInstanceCore` and ECR pull permissions. If using off-instance backups, grant `s3:PutObject` only for the chosen backup prefix and any required KMS permissions. Do not place AWS access keys in application environment files.
-
-Verify through an EC2 terminal or Systems Manager Session Manager:
+Docker Engine and Compose must already be installed. Run on EC2:
 
 ```bash
 sudo systemctl enable --now docker
 sudo docker version
 sudo docker compose version
-aws --version
-command -v bash flock tar base64
-sudo install -d -m 700 /opt/shsg /opt/shsg/backups /opt/shsg/releases
+sudo -n true
+command -v bash flock tar
+sudo install -d -m 700 /opt/shsg /opt/shsg/releases /opt/shsg/backups
+free -h
+df -h /
+swapon --show
 ```
 
-A `t3.micro` has 1 GiB RAM. This is a constrained testing host for four application/database containers. Builds run in GitHub Actions, but runtime memory must still be monitored. Use a larger instance before production traffic. Optional swap can reduce out-of-memory failures during testing, at the cost of disk I/O; first check `free -h`, `df -h`, and `swapon --show`. On a fresh host with sufficient disk and no existing `/swapfile`:
+The SSH account needs unattended sudo. Its deployment key can execute privileged commands; restrict it to the production environment and protect workflow changes. Optional swap on a test host with sufficient free disk and no existing `/swapfile`:
 
 ```bash
 sudo fallocate -l 2G /swapfile
@@ -44,106 +40,135 @@ sudo swapon /swapfile
 # /swapfile none swap sw 0 0
 ```
 
-The EC2 security group must allow TCP **9001 and 9002** from your testing IP initially (or intended visitors). Do not open 8000 or 5432. Systems Manager does not need inbound SSH; if using SSH for setup, restrict port 22 to your own IP. Docker publishes the frontend ports directly, so use the EC2 security group rather than relying only on host firewall rules.
+Allow TCP 9001/9002 from intended visitors in the EC2 security group. Keep 8000/5432 closed. SSH port 22 must allow your administrative IP and the deployment runner network. EC2 needs outbound HTTPS to GHCR and its image-layer storage.
 
-## 2. Create production configuration
+SSH working from your Mac does not establish GitHub runner connectivity. Standard hosted runners have changing outbound IPs. Choose a reachable runner network, such as a fixed-egress runner or private network, and allow that source; a rule allowing only your Mac will block Actions. See [GitHub runner networking](https://docs.github.com/en/actions/reference/runners/github-hosted-runners#ip-addresses). The workflow uses `ubuntu-24.04`; change its deployment runner if your network requires a dedicated runner.
 
-Copy the contents of [deploy/.env.example](../deploy/.env.example) into `/opt/shsg/.env.production` on EC2. From a checkout on the instance, you can run:
+## 2. Configure verified SSH
 
-```bash
-sudo install -m 600 deploy/.env.example /opt/shsg/.env.production
-sudoedit /opt/shsg/.env.production
-```
-
-A checkout is optional: create that same file using your EC2 terminal if CI will deliver the deployment files. Replace `ACCOUNT_ID` and both secret placeholders. Generate each secret independently using `openssl rand -hex 32`. Keep the file owned by root with mode `600`. The deployment script supplies the actual registry and commit tag, overriding the example values.
-
-The frontends call the API through Docker DNS (`http://api:8000`); their browser requests use same-origin `/api` routes. No public API port is necessary. The website's Login/Sign up destination is also built into rendered HTML, so changing `SHSG_APP_URL` requires a new image. Update the GitHub repository variables and EC2 configuration together. GitHub Actions cannot read `/opt/shsg/.env.production` on EC2 during an image build; the workflow takes public URLs from Actions variables, while Compose reads runtime settings from the EC2 environment file. CI uses localhost defaults when the variables are unset, but release builds require both variables explicitly.
-
-## 3. Configure ECR and GitHub access
-
-Create private ECR repositories named `shsg-website`, `shsg-app`, and `shsg-api` in `ap-southeast-2`, with immutable tags and image scanning. Images use the full Git commit SHA; retries reuse existing SHA images. Keep previous release images when setting a registry retention policy.
-
-Create a GitHub OIDC provider in IAM and a deployment role restricted to this repository's `production` environment. Use the actual OIDC subject format for your repository: newer GitHub repositories may include immutable owner/repository IDs. Do not copy another repository's trust subject. The audience is `sts.amazonaws.com`. See [GitHub's AWS OIDC setup](https://docs.github.com/en/actions/how-tos/secure-your-work/security-harden-deployments/oidc-in-aws).
-
-The GitHub deployment role needs:
-
-- `ecr:GetAuthorizationToken` on `*`.
-- `ecr:DescribeImages`, `ecr:BatchCheckLayerAvailability`, `ecr:InitiateLayerUpload`, `ecr:UploadLayerPart`, `ecr:CompleteLayerUpload`, `ecr:PutImage`, and `ecr:BatchGetImage` scoped to the three ECR repositories.
-- `ssm:SendCommand` scoped to the selected EC2 instance and the `AWS-RunShellScript` document.
-- `ssm:GetCommandInvocation` for checking the deployment result (this action requires resource `*`).
-
-The EC2 role needs ECR pull permissions (`ecr:GetAuthorizationToken`, `ecr:BatchGetImage`, `ecr:GetDownloadUrlForLayer`, and `ecr:BatchCheckLayerAvailability`) plus the SSM access described above. GitHub pushes images; EC2 only pulls them.
-
-Create a GitHub environment named **production**, restrict its deployment branches to `main`, and add these Actions variables:
-
-| Variable              | Scope                            | Value                                                   |
-| --------------------- | -------------------------------- | ------------------------------------------------------- |
-| `DEPLOY_ENABLED`      | Repository                       | `true` only after completing setup                      |
-| `SHSG_APP_URL`        | Repository                       | `http://15.134.206.246:9002`                            |
-| `SHSG_CORS_ORIGINS`   | Repository                       | `http://15.134.206.246:9001,http://15.134.206.246:9002` |
-| `AWS_DEPLOY_ROLE_ARN` | production environment           | ARN of the GitHub OIDC deployment role                  |
-| `EC2_INSTANCE_ID`     | production environment           | The `i-...` instance ID, not its IP/DNS name            |
-| `ECR_REGISTRY`        | production environment           | `ACCOUNT_ID.dkr.ecr.ap-southeast-2.amazonaws.com`       |
-| `BACKUP_S3_URI`       | production environment, optional | `s3://YOUR-BUCKET/shsg/backups`                         |
-
-For automatic deployment, do not require a manual reviewer on this environment. Protect `main` with a rule requiring **Required checks** before merge, including administrators if desired. Enabling repository rules and IAM is a one-time external setup; adding a workflow alone does not configure those services.
-
-## 4. Deploy
-
-Push or merge to `main`. CI runs formatting, lint, typechecks, tests, frontend builds, API checks, migration checks, the existing Compose checks, and a complete production-container smoke test. The latter checks both rendered sites, private API connectivity through the frontends, signup, and login against an isolated database.
-
-The production job builds and tests the x86-64 images once and preserves them as a short-lived workflow artifact when deployment is enabled. Only after **Required checks** succeeds does the deployment job publish those exact tested images to ECR and send the reviewed deployment assets to EC2 through Systems Manager. It waits for the remote command result, rather than reporting success merely because AWS accepted the command. Non-main pushes and pull requests never deploy. `DEPLOY_ENABLED` defaults to off when unset.
-
-On EC2 the script:
-
-1. Acquires a deployment lock, authenticates to ECR, and pulls the release images.
-2. Starts PostgreSQL and waits for database health.
-3. Creates a timestamped `pg_dump` backup in `/opt/shsg/backups`; optionally uploads it to S3. A failed backup/upload blocks the release.
-4. Runs a fresh `alembic upgrade head` task, then verifies the database is at the migration heads.
-5. Recreates the API and then both frontends, waiting for readiness/HTTP health checks.
-6. Records the successful release in `/opt/shsg/current-release`, preserving the previous successful release path in `/opt/shsg/previous-release`.
-
-The migration failure path leaves existing application containers running. A later application startup failure can leave a partially updated release; inspect logs and roll back compatible application images as below. This is a single-instance deployment with possible brief downtime, not blue/green deployment.
-
-Every deployment uses `/opt/shsg/releases/COMMIT_SHA/compose.production.yml` and `/opt/shsg/releases/COMMIT_SHA/deploy.sh`. For a manual retry of a release already transferred by CI:
+On your Mac, create a dedicated key if one is not already configured:
 
 ```bash
-sudo bash /opt/shsg/releases/COMMIT_SHA/deploy.sh \
-  ap-southeast-2 ACCOUNT_ID.dkr.ecr.ap-southeast-2.amazonaws.com COMMIT_SHA
+ssh-keygen -t ed25519 -C shsg-github-deploy -f ~/.ssh/shsg_deploy -N ""
+cat ~/.ssh/shsg_deploy.pub
 ```
 
-Pass your S3 prefix as the fourth argument if off-instance backups are configured. No server-side `git pull` or manual migration command is needed for routine releases.
+Append the public key to EC2's `/home/ubuntu/.ssh/authorized_keys`, preserving existing keys. Use mode 700 for `.ssh` and 600 for `authorized_keys`. Test from your Mac:
 
-## 5. Migrations, backups, and rollback
+```bash
+ssh -i ~/.ssh/shsg_deploy ubuntu@15.134.206.246
+```
 
-Create migrations during development with `alembic revision --autogenerate -m "description"`, review them, and commit them with the model change. Production **applies committed migrations**, never generates schema changes automatically. Alembic tracks applied revisions in `alembic_version`; repeated upgrades do not reapply them. Do not edit an already-applied migration.
+Get the host fingerprint from a trusted EC2 terminal:
 
-Use backward-compatible migrations while the old containers are still serving requests: add a column/table first, move application usage, and remove obsolete schema in a later reviewed release. Application rollback does not undo a database migration.
+```bash
+sudo ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub
+```
 
-The named volume `shsg-production_postgres_data` persists across container replacement. It does not protect against instance/disk loss. Local pre-deployment backups are not a scheduled disaster-recovery strategy: configure S3 backup uploads, lifecycle retention, scheduled backups between releases, and a tested restore before storing real customer data. Monitor disk space and remove old backups only after verifying off-instance copies. Never run `docker compose down --volumes` against this production stack.
+On your Mac, collect and verify the fingerprint matches EC2:
 
-To inspect the current release on EC2, use a root shell:
+```bash
+ssh-keyscan -t ed25519 15.134.206.246 > ~/.ssh/shsg_known_hosts
+ssh-keygen -lf ~/.ssh/shsg_known_hosts
+```
+
+Only use this file after comparison. CI uses strict host checking and does not trust a fresh, unverified scan.
+
+## 3. Configure GHCR pull access
+
+Images publish as `ghcr.io/LOWERCASE_OWNER/shsg-website`, `shsg-app`, and `shsg-api` with full commit SHA tags. For this repository the namespace is `ghcr.io/adarshsharma11`. Actions publishes with its built-in token and `packages: write`. Existing packages must grant this repository Actions access. Keep previous images available for rollback.
+
+For private packages, create a personal access token (classic) with `read:packages` for an account with package access; authorize organizational SSO if required. In the EC2 terminal:
+
+```bash
+read -rsp "GitHub package token: " GHCR_TOKEN
+printf '\n'
+printf '%s' "$GHCR_TOKEN" | sudo docker login ghcr.io --username YOUR_GITHUB_USERNAME --password-stdin
+unset GHCR_TOKEN
+```
+
+Expect `Login Succeeded`. Use sudo because the deployment runs Docker as root. Actual pull permissions are verified once images exist. Renew the login when the token expires. Packages are private on initial publication; review their access settings. [GHCR authentication documentation](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry)
+
+## 4. Configure production environment
+
+Create `/opt/shsg/.env.production` using [deploy/.env.example](../deploy/.env.example). No checkout is required; paste its contents through your EC2 terminal. Preserve an already configured file.
+
+```bash
+openssl rand -hex 32
+openssl rand -hex 32
+sudo touch /opt/shsg/.env.production
+sudo chmod 600 /opt/shsg/.env.production
+sudo nano /opt/shsg/.env.production
+```
+
+Use separate generated secrets for PostgreSQL and JWT signing. Keep `IMAGE_REGISTRY=ghcr.io/adarshsharma11` for this owner. The deployment script supplies the actual registry and SHA tag. Changing a password in this file does not change the password in an already initialized PostgreSQL database; coordinate later rotations.
+
+The frontend backend address is `http://api:8000` inside Docker; browser requests use same-origin `/api` routes. Website navigation is built into the image, so keep GitHub URL variables and EC2 settings consistent and rebuild when changing the public destination. Actions cannot read the EC2 environment file during builds.
+
+## 5. Configure GitHub
+
+Create **Settings → Environments → production**, allowing deployments only from `main`. Add these environment secrets:
+
+| Secret            | Value                                          |
+| ----------------- | ---------------------------------------------- |
+| `SSH_HOST`        | `15.134.206.246`                               |
+| `SSH_USER`        | `ubuntu`                                       |
+| `SSH_PRIVATE_KEY` | Full contents of `~/.ssh/shsg_deploy`          |
+| `SSH_KNOWN_HOSTS` | Verified contents of `~/.ssh/shsg_known_hosts` |
+
+If your deployment private key is encrypted, also add `DEPLOY_KEY_PASSPHRASE`. Leave it unset for the unencrypted key created above. Both actions verify the host fingerprint derived from `SSH_KNOWN_HOSTS`. No Python deployment helper is required; the production smoke check uses Node.js.
+
+For automatic deployment, configure the environment without manual reviewers, subject to your organization's protection requirements. On your Mac, `pbcopy < ~/.ssh/shsg_deploy` copies the key directly for pasting into the secret.
+
+Add **repository-level** Actions variables:
+
+| Variable            | Value                                                   |
+| ------------------- | ------------------------------------------------------- |
+| `DEPLOY_ENABLED`    | `false` during setup; `true` when ready                 |
+| `SHSG_APP_URL`      | `http://15.134.206.246:9002`                            |
+| `SHSG_CORS_ORIGINS` | `http://15.134.206.246:9001,http://15.134.206.246:9002` |
+
+URL variables must be repository-scoped because production-image checks run before the deployment environment. Tests use localhost defaults when unset; release builds require explicit URLs. AWS deployment variables are no longer used and can be removed. Protect `main` with **Required checks**, and permit package publishing according to repository/organization policy.
+
+## 6. Enable deployment
+
+First commit/push this workflow with `DEPLOY_ENABLED=false` and verify all checks pass. After the EC2 configuration, GHCR login, SSH secrets, and runner network are ready, set `DEPLOY_ENABLED=true` and push/merge a new commit to `main`.
+
+CI tests both production frontends, API connectivity, signup/login, and migrations. The exact tested images pass to the deployment job as a short-lived artifact. Only after all required checks pass does the job publish to GHCR and upload only the two deployment files into a temporary server directory and execute the release through the SSH action. The actions use the verified host fingerprint. The server-side temporary upload directory is removed before running the release. No `git pull` on EC2 is necessary.
+
+The remote script locks deployment, pulls images, starts PostgreSQL, backs it up, applies committed migrations, then starts the API and frontends with health checks. Remote command failures fail the job. Migration failures prevent application replacement; a later startup failure can leave a partially updated stack. This single-instance setup can have brief downtime.
+
+Pull requests and non-main branches do not deploy. Manual dispatch on `main` runs the same checks and can deploy when enabled. An unset/false `DEPLOY_ENABLED` skips deployment. For a manual retry of an already transferred release:
+
+```bash
+sudo bash /opt/shsg/releases/COMMIT_SHA/deploy.sh ghcr.io/adarshsharma11 COMMIT_SHA
+```
+
+## 7. Logs, migrations, backups, and rollback
+
+Create, review, and commit migration files during development. Each release runs a fresh `alembic upgrade head` task and verifies migration heads. Production never generates migrations or automatically downgrades a database. Use backward-compatible migrations while old containers still serve traffic.
+
+The named volume `shsg-production_postgres_data` survives container replacement. Never run `docker compose down --volumes` on production. The script creates local pre-deployment backups in `/opt/shsg/backups`. It does not upload or schedule backups: arrange off-instance copies, retention, scheduled backups, and a tested restore before storing real customer data. Local files and volumes do not protect against disk/instance loss.
+
+Inspect the latest healthy release in a root shell:
 
 ```bash
 sudo -i
 cd "$(cat /opt/shsg/current-release)"
+export IMAGE_REGISTRY=ghcr.io/adarshsharma11 IMAGE_TAG="${PWD##*/}"
 docker compose --env-file /opt/shsg/.env.production -f compose.production.yml ps --all
 docker compose --env-file /opt/shsg/.env.production -f compose.production.yml logs --tail=100 api website app
 ```
 
-For a failed deployment, inspect its directory under `/opt/shsg/releases/COMMIT_SHA`; `current-release` still points to the last fully healthy release. Logs are rotated to limit disk growth. Health checks detect readiness; `unless-stopped` restarts exited containers, but Docker does not restart a running process just because its health status is unhealthy.
+For failed deployments, inspect `/opt/shsg/releases/COMMIT_SHA`. The current marker only changes after health checks succeed; the preceding healthy path is in `/opt/shsg/previous-release`. Logs rotate; Docker does not restart a running process solely because its health check fails.
 
-To roll back application images, first verify the current database is compatible with the target release. From a root shell, select a known healthy directory (use `current-release` if the new release failed, or `previous-release` if the new release completed):
+Before application rollback, confirm the current database is compatible with the target version. From a root shell:
 
 ```bash
 cd /opt/shsg/releases/KNOWN_HEALTHY_COMMIT_SHA
-export IMAGE_TAG=KNOWN_HEALTHY_COMMIT_SHA
+export IMAGE_REGISTRY=ghcr.io/adarshsharma11 IMAGE_TAG=KNOWN_HEALTHY_COMMIT_SHA
 docker compose --env-file /opt/shsg/.env.production -f compose.production.yml \
   up --detach --no-deps --wait --wait-timeout 240 api website app
 ```
 
-This deliberately does not run migrations or downgrade the database. Record the chosen directory in `current-release` after verifying the recovery. A database restore is a separate maintenance operation: stop application writes, restore a verified backup into an isolated database first, and validate before switching traffic.
-
-## Verification before enabling deployment
-
-Confirm the EC2 operating system, Docker/Compose/AWS CLI installation, SSM online status, sufficient memory/disk, environment secrets, ECR repositories, IAM roles, GitHub variables, environment restrictions, and main-branch rules. Then enable `DEPLOY_ENABLED` and merge a tested change. The repository files do not connect to or modify the instance until a configured deployment job or manual command runs.
+This does not run migrations. After verifying recovery, update the current-release marker. Database restoration is a separate maintenance operation with application writes stopped and a verified backup.

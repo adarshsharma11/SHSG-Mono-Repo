@@ -272,6 +272,7 @@ jobs:
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+          DEPLOY_KEY_PASSPHRASE: ${{ secrets.DEPLOY_KEY_PASSPHRASE }}
         run: |
           test -n "$SSH_HOST" || { echo 'Set SSH_HOST in the production environment'; exit 1; }
           test -n "$SSH_USER" || { echo 'Set SSH_USER in the production environment'; exit 1; }
@@ -279,7 +280,17 @@ jobs:
           test -n "$SSH_KNOWN_HOSTS" || { echo 'Set SSH_KNOWN_HOSTS in the production environment'; exit 1; }
           known_hosts="$(mktemp)"
           trap 'rm -f "$known_hosts"' EXIT
+          umask 077
+          key_file="$RUNNER_TEMP/shsg_deploy_key"
+          printf '%s\n' "$SSH_PRIVATE_KEY" | tr -d '\r' > "$key_file"
+          if ! ssh-keygen -y -P "$DEPLOY_KEY_PASSPHRASE" -f "$key_file" > /dev/null 2>&1; then
+            echo '::error::SSH_PRIVATE_KEY in the production environment is not a valid private key, or DEPLOY_KEY_PASSPHRASE is incorrect. Paste the full private key, including BEGIN/END lines, without quotes.'
+            exit 1
+          fi
+          printf 'key_file=%s\n' "$key_file" >> "$GITHUB_OUTPUT"
           printf '%s\n' "$SSH_KNOWN_HOSTS" > "$known_hosts"
+          host_keys="$(ssh-keygen -F "$SSH_HOST" -f "$known_hosts")" || { echo '::error::SSH_KNOWN_HOSTS has no entry for SSH_HOST. Update it with the verified current EC2 host key.'; exit 1; }
+          printf '%s\n' "$host_keys" > "$known_hosts"
           fingerprint="$(ssh-keygen -lf "$known_hosts" -E sha256 | awk 'NR == 1 {print $2}')"
           test -n "$fingerprint" || { echo 'SSH_KNOWN_HOSTS must contain a verified SSH host key'; exit 1; }
           printf 'fingerprint=%s\n' "$fingerprint" >> "$GITHUB_OUTPUT"
@@ -304,7 +315,7 @@ jobs:
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          key_path: ${{ steps.ssh_identity.outputs.key_file }}
           passphrase: ${{ secrets.DEPLOY_KEY_PASSPHRASE }}
           fingerprint: ${{ steps.ssh_identity.outputs.fingerprint }}
           source: deploy/compose.production.yml,deploy/deploy.sh
@@ -315,7 +326,7 @@ jobs:
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          key_path: ${{ steps.ssh_identity.outputs.key_file }}
           passphrase: ${{ secrets.DEPLOY_KEY_PASSPHRASE }}
           fingerprint: ${{ steps.ssh_identity.outputs.fingerprint }}
           command_timeout: 20m
@@ -329,3 +340,6 @@ jobs:
             rm -f "$UPLOAD_DIRECTORY/compose.production.yml" "$UPLOAD_DIRECTORY/deploy.sh"
             rmdir "$UPLOAD_DIRECTORY"
             sudo -n bash "$release/deploy.sh" "$IMAGE_REGISTRY" "$GITHUB_SHA"
+      - name: Remove temporary SSH private key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/shsg_deploy_key"
