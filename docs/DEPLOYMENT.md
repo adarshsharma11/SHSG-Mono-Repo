@@ -62,17 +62,17 @@ ssh -i ~/.ssh/shsg_deploy ubuntu@15.134.206.246
 Get the host fingerprint from a trusted EC2 terminal:
 
 ```bash
-sudo ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub
+sudo awk '{print "15.134.206.246", $1, $2}' /etc/ssh/ssh_host_*_key.pub
 ```
 
-On your Mac, collect and verify the fingerprint matches EC2:
+Copy all output lines from the trusted EC2 terminal into the `SSH_KNOWN_HOSTS` production secret. These are public server keys, not the deployment private key. If collecting keys on your Mac instead, compare each fingerprint against the corresponding key read directly on EC2:
 
 ```bash
-ssh-keyscan -t ed25519 15.134.206.246 > ~/.ssh/shsg_known_hosts
+ssh-keyscan -t ecdsa,rsa,ed25519 15.134.206.246 > ~/.ssh/shsg_known_hosts
 ssh-keygen -lf ~/.ssh/shsg_known_hosts
 ```
 
-Only use this file after comparison. CI uses strict host checking and does not trust a fresh, unverified scan.
+Only use this file after comparison. The workflow selects a trusted key in the Go SSH client's preference order (ECDSA, RSA, then Ed25519). An Ed25519-only entry can mismatch when the server also offers ECDSA: each algorithm has a different fingerprint. Do not disable fingerprint verification or automatically trust keys obtained from the network.
 
 ## 3. Configure GHCR pull access
 

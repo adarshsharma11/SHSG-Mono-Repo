@@ -290,9 +290,20 @@ jobs:
           printf 'key_file=%s\n' "$key_file" >> "$GITHUB_OUTPUT"
           printf '%s\n' "$SSH_KNOWN_HOSTS" > "$known_hosts"
           host_keys="$(ssh-keygen -F "$SSH_HOST" -f "$known_hosts")" || { echo '::error::SSH_KNOWN_HOSTS has no entry for SSH_HOST. Update it with the verified current EC2 host key.'; exit 1; }
-          printf '%s\n' "$host_keys" > "$known_hosts"
+          # Match the host-key preference used by the actions' Go SSH client.
+          # SSH_KNOWN_HOSTS should contain all active host public keys from EC2.
+          selected_key=''
+          for algorithm in ecdsa-sha2-nistp256 ecdsa-sha2-nistp384 ecdsa-sha2-nistp521 ssh-rsa ssh-ed25519; do
+            selected_key="$(printf '%s\n' "$host_keys" | awk -v algorithm="$algorithm" '$2 == algorithm { print; exit }')"
+            if [ -n "$selected_key" ]; then
+              break
+            fi
+          done
+          test -n "$selected_key" || { echo '::error::No supported host key found in SSH_KNOWN_HOSTS'; exit 1; }
+          printf '%s\n' "$selected_key" > "$known_hosts"
           fingerprint="$(ssh-keygen -lf "$known_hosts" -E sha256 | awk 'NR == 1 {print $2}')"
           test -n "$fingerprint" || { echo 'SSH_KNOWN_HOSTS must contain a verified SSH host key'; exit 1; }
+          printf 'Verifying server host key: %s %s\n' "$algorithm" "$fingerprint"
           printf 'fingerprint=%s\n' "$fingerprint" >> "$GITHUB_OUTPUT"
           printf 'IMAGE_REGISTRY=ghcr.io/%s\n' "${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_ENV"
       - name: Log in to GitHub Container Registry
