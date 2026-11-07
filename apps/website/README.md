@@ -26,19 +26,28 @@ components/
 │   ├── navigation.ts        # Header/footer link data
 │   └── site.css             # Website shell styles and tokens
 └── home/
-    ├── sections/           # Hero, services, family, process, planner, FAQs
+    ├── sections/           # Shared family, process, planner, and FAQ sections
+    ├── homepage.tsx        # Composition for three distinct homepage designs
+    ├── home-heroes.tsx     # Photo, animated workshop, and editorial heroes
+    ├── home-views.tsx      # Links between the three designs
+    ├── services.ts         # Sixteen services and four browsing groups
+    ├── service-explorer.tsx # Search, category filters, service selection
+    ├── toolbench.tsx       # Animated SVG tools with a pause control
+    ├── project-stories.tsx # Selectable, honestly labelled inspiration
     ├── home-content.ts     # Project choices and FAQs
     └── project-planner.tsx # Local brief preparation and download
 content/divisions.ts        # Brand information reused across the website
 ```
 
-`app/page.tsx` composes six server-rendered sections. `app/home.css` owns the homepage layout and motion. Site styles apply to common navigation/footer; the standalone component examples remain at `/components`, with `/api` available in development.
+The recommended photography-led homepage is `/`. Two linked alternatives are available at `/home/workshop` (animated tools) and `/home/transformations` (editorial project inspiration). Each page links to the other designs near the hero and at the end. The alternatives are marked `noindex` while being compared.
+
+All homepage styling uses Tailwind utilities. Static page sections render on the server; filters, project selection, story switching, and the tool pause control use small client components. Motion respects reduced-motion preferences, and the animated workshop has a pause button. Site styles apply to common navigation/footer; the standalone component examples remain at `/components`, with `/api` available in development.
 
 The structure follows the reference public website’s separation of header/footer and content components, adapted to App Router layouts with minimal client boundaries. Navigation uses regular links and disclosure buttons, rather than ARIA application menus. Links back to homepage sections use `/#section` so they also work from other routes.
 
 The design takes direction from the supplied Handoff/YourGPT screenshots: spacious sans-serif typography, navy surfaces, pale-blue emphasis, rounded photography and controls, clear service blocks, and grouped footer links. SHSG content remains focused on homeowners and its two divisions; no third-party AI features, statistics, or certifications are claimed.
 
-The homepage uses shared UI components from `@shsg/ui`. The planner does not submit a lead or book a visit. It downloads a brief locally and links to the relevant existing division website. Neither AI, pricing, scheduling, nor payment is connected to this page.
+The homepages use shared UI components from `@shsg/ui`. A selected service carries into the planner without discarding a typed description. The planner does not submit a lead or book a visit. It downloads a brief locally and links to the relevant existing division website. Photography is illustrative inspiration, not a completed-project portfolio. Neither AI, pricing, scheduling, nor payment is connected to these pages.
 
 See the [SHSG implementation plan](../../docs/SHSG_PLAN.md) for the proposal-based roadmap, launch checks, and next real intake milestone.
 

@@ -5,12 +5,13 @@ import { Button, Modal, Select, Textarea } from '@shsg/ui';
 import { divisions, projectTypes } from './home-content';
 
 interface ProjectBrief {
+  service: string;
   project: string;
   description: string;
   division: (typeof divisions)[number];
 }
 
-export function ProjectPlanner() {
+export function ProjectPlanner({ service = '' }: { service?: string }) {
   const [brief, setBrief] = useState<ProjectBrief | null>(null);
   const [open, setOpen] = useState(false);
   const [error, setError] = useState('');
@@ -26,7 +27,7 @@ export function ProjectPlanner() {
     }
     const division = divisions.find((item) => item.id === project.division)!;
     setError('');
-    setBrief({ project: project.label, description, division });
+    setBrief({ service, project: project.label, description, division });
     setOpen(true);
   }
 
@@ -34,7 +35,7 @@ export function ProjectPlanner() {
     if (!brief) {
       return;
     }
-    const text = `SHSG project brief\n\nProject: ${brief.project}\n\n${brief.description}\n\nSuggested starting point: ${brief.division.name}\n${brief.division.href}\n\nPrepared locally. This brief has not been submitted and is not a booking or estimate.\n`;
+    const text = `SHSG project brief\n\nProject: ${brief.project}\n${brief.service ? `Service: ${brief.service}\n` : ''}\n${brief.description}\n\nSuggested starting point: ${brief.division.name}\n${brief.division.href}\n\nPrepared locally. This brief has not been submitted and is not a booking or estimate.\n`;
     const url = URL.createObjectURL(new Blob([text], { type: 'text/plain;charset=utf-8' }));
     const link = document.createElement('a');
     link.href = url;
@@ -45,7 +46,12 @@ export function ProjectPlanner() {
 
   return (
     <>
-      <form className="home-planner-form" onSubmit={prepareBrief}>
+      <form className="space-y-5" onSubmit={prepareBrief}>
+        {service && (
+          <p className="border-b border-(--site-border) pb-4 text-sm leading-6 text-(--site-muted)">
+            Project focus: <strong className="text-(--site-primary)">{service}</strong>
+          </p>
+        )}
         <Select name="project" label="What are you thinking about?" defaultValue="repair" required>
           {projectTypes.map((project) => (
             <option key={project.value} value={project.value}>
@@ -71,20 +77,21 @@ export function ProjectPlanner() {
         <Button type="submit" size="lg" fullWidth>
           Create my project brief
         </Button>
-        <p className="home-form-note">Just a starting point. Your brief stays on your device; nothing is sent and no visit is booked.</p>
+        <p className="text-xs leading-6 text-(--site-muted)">Just a starting point. Your brief stays on your device; nothing is sent and no visit is booked.</p>
       </form>
       <Modal open={open} onOpenChange={setOpen} title="A good place to start." description="Save your brief, then share it with the team when you get in touch." animation="slide-up" className="home-brief-modal" footer={<Button onClick={downloadBrief}>Download project brief</Button>}>
         {brief && (
-          <div className="home-brief-content">
-            <p className="home-eyebrow">{brief.project}</p>
-            <p className="home-brief-description">{brief.description}</p>
+          <div className="space-y-5">
+            <p className="text-xs font-semibold tracking-widest text-(--site-primary) uppercase">{brief.project}</p>
+            {brief.service && <p className="text-sm font-semibold">{brief.service}</p>}
+            <p className="text-base leading-7">{brief.description}</p>
             <p>
               Suggested starting point: <strong>{brief.division.name}</strong>
             </p>
-            <a href={brief.division.href} className="home-text-link">
+            <a href={brief.division.href} className="inline-flex min-h-11 items-center text-sm font-semibold text-(--site-primary) underline underline-offset-8">
               {brief.division.linkLabel}
             </a>
-            <p className="home-form-note">Your brief is not automatically transferred. Download it and include the details when contacting the team. Confirm scope, coverage, and availability directly.</p>
+            <p className="text-xs leading-6 text-(--site-muted)">Your brief is not automatically transferred. Download it and include the details when contacting the team. Confirm scope, coverage, and availability directly.</p>
           </div>
         )}
       </Modal>

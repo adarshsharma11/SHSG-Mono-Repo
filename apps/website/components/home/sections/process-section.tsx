@@ -17,21 +17,21 @@ const steps = [
 
 export function ProcessSection() {
   return (
-    <section className="home-container home-section" id="how-it-works" aria-labelledby="process-heading">
-      <div className="home-process-heading">
-        <p className="home-eyebrow">A clearer starting point</p>
-        <Typography as="h2" variant="h2" tone="inherit" id="process-heading" className="home-heading">
+    <section className="mx-auto max-w-[1320px] px-5 py-20 sm:px-10 lg:px-12 lg:py-24" id="how-it-works" aria-labelledby="process-heading">
+      <div className="mb-12 max-w-lg">
+        <p className="mb-4 text-[11px] font-semibold tracking-[0.18em] text-(--site-muted) uppercase">A clearer starting point</p>
+        <Typography as="h2" variant="h2" tone="inherit" id="process-heading">
           From “someday”
           <br />
           to a starting point.
         </Typography>
       </div>
-      <ol className="home-steps">
+      <ol className="grid gap-10 md:grid-cols-3 md:gap-14">
         {steps.map(({ title, description }, index) => (
           <li key={title}>
-            <span className="home-step-number">0{index + 1}</span>
-            <h3>{title}</h3>
-            <p>{description}</p>
+            <span className="text-xs font-semibold tracking-[0.15em] text-[#9a684d]">0{index + 1}</span>
+            <h3 className="mt-5 text-xl font-medium tracking-tight text-(--site-primary)">{title}</h3>
+            <p className="mt-3 text-sm leading-7 text-(--site-muted)">{description}</p>
           </li>
         ))}
       </ol>
